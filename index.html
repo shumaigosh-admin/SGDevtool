@@ -262,7 +262,10 @@ select option { background: var(--panel2); }
       </div>
 
       <div class="card">
-        <div class="card-title">All Customers <span id="customerCount" style="color:var(--accent)"></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">All Customers <span id="customerCount" style="color:var(--accent)"></span></div>
+          <button class="btn btn-blue btn-sm" onclick="pullAllFromFirebase()" id="pullFbBtn">🔄 Pull from Firebase</button>
+        </div>
         <div style="margin-bottom:12px;">
           <input id="customerSearch" type="text" placeholder="🔍  Search by ID, name, or mobile…" oninput="renderCustomerList()" style="background:var(--panel2);">
         </div>
@@ -588,6 +591,12 @@ select option { background: var(--panel2); }
         <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Deletes all records under <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">customers/</code> in Firebase Realtime Database. meta/id_seq is NOT reset.</p>
         <button class="btn btn-red" onclick="devWipeFirebaseCustomers()">🔥 Wipe Firebase customers/</button>
       </div>
+
+      <div class="card danger-zone" style="border-color:rgba(231,76,60,0.6);background:rgba(231,76,60,0.08);">
+        <div class="card-title" style="color:var(--red)">☢ FULL NUCLEAR WIPE</div>
+        <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Wipes <strong style="color:var(--text)">everything</strong>: localStorage + Firebase customers/ + resets id_seq to 0. Next registered account will be SG-000001. <strong style="color:var(--red)">Completely irreversible.</strong></p>
+        <button class="btn btn-red btn-full" onclick="devNuclearWipe()" style="font-size:13px;height:44px;">☢ Full Nuclear Wipe</button>
+      </div>
     </div>
 
   </main>
@@ -773,6 +782,8 @@ function renderCustomerList() {
     return;
   }
   wrap.innerHTML = filtered.map(c => {
+    const displayName = c.fullName || c.name || '—';
+    const displayMobile = c.mobileNumber || c.mobile || '—';
     const state = getRewardState(c);
     const avatarHtml = c.selfiePhoto
       ? `<img src="${c.selfiePhoto}" alt="">`
@@ -782,8 +793,8 @@ function renderCustomerList() {
            onclick="selectCustomer('${c.customerId}')">
         <div class="cr-avatar">${avatarHtml}</div>
         <div class="cr-info">
-          <div class="cr-name">${c.name}</div>
-          <div class="cr-meta">${c.customerId} · ${c.mobile || '—'} · ${c.stamps || 0} stamps</div>
+          <div class="cr-name">${displayName}</div>
+          <div class="cr-meta">${c.customerId} · ${displayMobile} · ${c.stamps || 0} stamps</div>
           <div class="cr-badges" style="margin-top:5px;">
             <span class="badge ${state === 'UNLOCKED' ? 'badge-yellow' : state === 'CLAIMED' ? 'badge-green' : 'badge-blue'}">${state}</span>
             ${c.selfiePhoto ? '<span class="badge badge-pink">📸 selfie</span>' : ''}
@@ -791,6 +802,8 @@ function renderCustomerList() {
             <span class="badge badge-blue">×${c.rewardsClaimed || 0} claimed</span>
           </div>
         </div>
+        <button class="btn btn-red btn-sm" style="flex-shrink:0;"
+          onclick="event.stopPropagation();quickDeleteCustomer('${c.customerId}','${displayName}')">🗑</button>
       </div>`;
   }).join('');
 }
@@ -1215,8 +1228,70 @@ function copyRaw() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   RESET / WIPE
+   PULL ALL CUSTOMERS FROM FIREBASE
 ════════════════════════════════════════════════════════════════ */
+async function pullAllFromFirebase() {
+  const btn = document.getElementById('pullFbBtn');
+  btn.disabled = true; btn.textContent = '⏳ Pulling…';
+  try {
+    const snap = await db.ref('customers').once('value');
+    if (!snap.exists()) { toast('No customers in Firebase', 'warn'); return; }
+    const fbData = snap.val();
+    const fbCustomers = Object.values(fbData);
+    const cached = loadCustomers();
+    let added = 0, updated = 0;
+    fbCustomers.forEach(c => {
+      const idx = cached.findIndex(x => x.customerId === c.customerId);
+      if (idx >= 0) { cached[idx] = c; updated++; }
+      else { cached.push(c); added++; }
+    });
+    saveCustomers(cached);
+    log('ok', `Firebase pull: ${added} added, ${updated} updated`);
+    toast(`✅ Pulled — ${added} new, ${updated} updated`, 'ok');
+    refreshAll();
+  } catch(e) {
+    log('err', 'Firebase pull failed: ' + e.message);
+    toast('❌ Pull failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '🔄 Pull from Firebase';
+  }
+}
+
+/* ── Quick inline delete from customer list ── */
+async function quickDeleteCustomer(id, name) {
+  if (!confirm(`Delete ${name} (${id})?\n\nThis removes them from localStorage AND Firebase.`)) return;
+  const all = loadCustomers().filter(c => c.customerId !== id);
+  saveCustomers(all);
+  const passports = loadPassports(); delete passports[id]; savePassports(passports);
+  await fbDelete('customers:' + id);
+  await fbDelete('passport:' + id);
+  await fbDelete('activity:' + id);
+  if (selectedCustomerId === id) {
+    selectedCustomerId = null;
+    document.getElementById('customerDetailCard').style.display = 'none';
+  }
+  log('warn', `Deleted ${id} — ${name}`);
+  toast(`🗑 Deleted ${id}`, 'warn');
+  refreshAll();
+}
+
+/* ── Nuclear wipe: localStorage + Firebase + id_seq reset ── */
+async function devNuclearWipe() {
+  if (!confirm('☢ FULL NUCLEAR WIPE\n\nThis will delete ALL accounts from Firebase AND localStorage, and reset the ID counter to 0.\n\nType OK to confirm — this CANNOT be undone.')) return;
+  const second = prompt('Type WIPE to confirm full deletion:');
+  if (second !== 'WIPE') { toast('Cancelled', 'warn'); return; }
+  [CACHE_CUSTOMERS, CACHE_ID_SEQ, CACHE_SESSION, CACHE_PASSPORTS, CACHE_ACTIVITY, STORE_ACTIVITY].forEach(k => localStorage.removeItem(k));
+  await db.ref('customers').remove();
+  await db.ref('meta/id_seq').set(0);
+  localStorage.setItem(CACHE_ID_SEQ, '0');
+  selectedCustomerId = null;
+  document.getElementById('customerDetailCard').style.display = 'none';
+  log('err', '☢ Nuclear wipe complete — all data deleted, id_seq reset to 0');
+  toast('☢ Nuclear wipe complete', 'err');
+  refreshAll();
+}
+
+
 async function devDeleteCustomer() {
   const id = document.getElementById('resetTarget').value;
   if (!id) { toast('Select a customer', 'warn'); return; }
