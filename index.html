@@ -816,16 +816,22 @@ function selectCustomer(id) {
   const card = document.getElementById('customerDetailCard');
   card.style.display = 'block';
   document.getElementById('detailId').textContent = id;
+  const dName   = c.fullName    || c.name   || '—';
+  const dMobile = c.mobileNumber || c.mobile || '—';
   document.getElementById('customerDetail').innerHTML = `
-    <div class="stat-row"><span>Name</span><span class="stat-val">${c.name}</span></div>
-    <div class="stat-row"><span>Mobile</span><span class="stat-val">${c.mobile || '—'}</span></div>
+    <div class="stat-row"><span>Name</span><span class="stat-val">${dName}</span></div>
+    <div class="stat-row"><span>Mobile</span><span class="stat-val">${dMobile}</span></div>
     <div class="stat-row"><span>Passport Number</span><span class="stat-val">${c.passportNumber || '—'}</span></div>
+    <div class="stat-row"><span>PIN</span><span class="stat-val" style="letter-spacing:0.15em;">${c.pin ? '●'.repeat(c.pin.length) : '—'}</span></div>
     <div class="stat-row"><span>Stamps</span><span class="stat-val">${c.stamps || 0}</span></div>
     <div class="stat-row"><span>Rewards Claimed</span><span class="stat-val">${c.rewardsClaimed || 0}</span></div>
     <div class="stat-row"><span>Reward State</span><span class="stat-val">${getRewardState(c)}</span></div>
     <div class="stat-row"><span>Has Selfie</span><span class="stat-val">${c.selfiePhoto ? '✅ Yes' : '❌ No'}</span></div>
     <div class="stat-row"><span>Bonus Reward</span><span class="stat-val">${c.bonusReward ? '🥤 Yes' : '—'}</span></div>
     <div class="stat-row"><span>Created</span><span class="stat-val">${c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</span></div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-red btn-sm" onclick="quickDeleteCustomer('${c.customerId}','${dName}')">🗑 Delete This Account</button>
+    </div>
   `;
 }
 
