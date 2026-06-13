@@ -4,773 +4,1357 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ SG DevTools v2</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>🛠️ SG Dev Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#080b12;--surface:#0f1420;--surface2:#161c2d;--surface3:#1e2538;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
-  --accent:#f2849e;--accent2:#e05580;--accentglow:rgba(242,132,158,0.15);
-  --green:#2ecc71;--greenglow:rgba(46,204,113,0.15);
-  --yellow:#f1c40f;--yellowglow:rgba(241,196,15,0.15);
-  --red:#e74c3c;--redglow:rgba(231,76,60,0.15);
-  --blue:#3b82f6;--blueglow:rgba(59,130,246,0.15);
-  --purple:#a855f7;--purpleglow:rgba(168,85,247,0.15);
-  --cyan:#06b6d4;--orange:#f97316;
-  --text:#e2e8f0;--muted:#64748b;--soft:rgba(226,232,240,0.5);
-  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;--sw:240px;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0f1117;
+  --panel:     #1a1d27;
+  --panel2:    #22263a;
+  --border:    rgba(255,255,255,0.07);
+  --accent:    #F2849E;
+  --accent2:   #E05580;
+  --green:     #2ecc71;
+  --yellow:    #f1c40f;
+  --red:       #e74c3c;
+  --blue:      #3498db;
+  --purple:    #9b59b6;
+  --text:      #e8eaf0;
+  --soft:      rgba(232,234,240,0.45);
+  --font:      'Nunito', sans-serif;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;overflow:hidden;}
-.shell{display:grid;grid-template-columns:var(--sw) 1fr;height:100vh;}
-.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.main{overflow-y:auto;background:var(--bg);}
-.sidebar-head{padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.sidebar-logo{display:flex;align-items:center;gap:9px;margin-bottom:4px;}
-.logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.sidebar-logo h1{font-size:14px;font-weight:800;letter-spacing:-0.02em;}
-.sidebar-logo h1 span{color:var(--accent);}
-.sidebar-tagline{font-size:10px;color:var(--muted);font-family:var(--mono);}
-.sidebar-scroll{flex:1;overflow-y:auto;padding:8px 0;}
-.sidebar-scroll::-webkit-scrollbar{width:3px;}
-.sidebar-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
-.nav-group{padding:12px 12px 4px;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
-.nav-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;background:none;border:none;color:var(--soft);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;text-align:left;border-left:2px solid transparent;transition:all 0.12s;}
-.nav-btn:hover{background:var(--accentglow);color:var(--text);}
-.nav-btn.active{background:var(--accentglow);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
-.nav-btn .ni{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
-.nav-btn .nbadge{margin-left:auto;background:var(--surface3);color:var(--muted);font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 6px;border-radius:99px;}
-.nav-btn.active .nbadge{background:var(--accentglow);color:var(--accent);}
-.sidebar-source{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;}
-.source-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px;gap:3px;}
-.source-btn{flex:1;padding:5px 8px;border:none;border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;background:none;color:var(--muted);}
-.source-btn.active{background:var(--accent2);color:#fff;}
-.topbar{padding:16px 24px 0;display:flex;align-items:center;gap:12px;margin-bottom:20px;}
-.topbar-title{font-size:18px;font-weight:800;letter-spacing:-0.02em;}
-.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;font-family:var(--mono);}
-.status-pill.online{background:var(--greenglow);color:var(--green);border:1px solid rgba(46,204,113,0.2);}
-.status-pill.offline{background:var(--redglow);color:var(--red);border:1px solid rgba(231,76,60,0.2);}
-.status-pill.connecting{background:var(--yellowglow);color:var(--yellow);border:1px solid rgba(241,196,15,0.2);}
-.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
-.status-dot.pulse{animation:sdp 1.5s infinite;}
-@keyframes sdp{0%,100%{opacity:1;}50%{opacity:0.3;}}
-.panel{display:none;padding:0 24px 24px;}
-.panel.active{display:block;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
-.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.card-title{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);}
-.card.danger{border-color:rgba(231,76,60,0.2);background:rgba(231,76,60,0.03);}
-.card.danger .card-title{color:var(--red);}
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
-.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
-.stat-box .sv{font-size:24px;font-weight:800;font-family:var(--mono);letter-spacing:-0.03em;line-height:1;}
-.stat-box .sl{font-size:10px;color:var(--muted);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;}
-.stat-box.green .sv{color:var(--green);}
-.stat-box.yellow .sv{color:var(--yellow);}
-.stat-box.pink .sv{color:var(--accent);}
-.stat-box.blue .sv{color:var(--blue);}
-.stat-box.purple .sv{color:var(--purple);}
-.stat-box.red .sv{color:var(--red);}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.12s;white-space:nowrap;}
-.btn:active{transform:scale(0.96);}
-.btn:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
-.btn-pink{background:var(--accent2);color:#fff;}.btn-pink:hover:not(:disabled){background:#c9466e;}
-.btn-green{background:var(--green);color:#fff;}.btn-green:hover:not(:disabled){background:#27ae60;}
-.btn-red{background:var(--red);color:#fff;}.btn-red:hover:not(:disabled){background:#c0392b;}
-.btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover:not(:disabled){background:#2563eb;}
-.btn-yellow{background:var(--yellow);color:#111;}.btn-yellow:hover:not(:disabled){background:#d4ac0d;}
-.btn-purple{background:var(--purple);color:#fff;}.btn-purple:hover:not(:disabled){background:#9333ea;}
-.btn-cyan{background:var(--cyan);color:#111;}
-.btn-ghost{background:var(--surface3);color:var(--text);border:1px solid var(--border2);}.btn-ghost:hover:not(:disabled){background:var(--surface2);border-color:var(--accent);}
-.btn-full{width:100%;}.btn-sm{padding:5px 10px;font-size:11px;}.btn-xs{padding:3px 8px;font-size:10px;}
-.form-row{margin-bottom:10px;}
-label.fl{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
-input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;transition:border-color 0.12s;}
-input:focus,select:focus,textarea:focus{border-color:var(--accent);}
-select option{background:var(--surface2);}
-.form-inline{display:flex;gap:8px;align-items:flex-end;}.form-inline input,.form-inline>div{flex:1;}
-.tbl{width:100%;border-collapse:collapse;font-size:12px;}
-.tbl th{padding:8px 10px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);border-bottom:1px solid var(--border);}
-.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tr:hover td{background:var(--surface2);}
-.tbl-wrap{max-height:420px;overflow-y:auto;border-radius:8px;border:1px solid var(--border);}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;}
-.badge-green{background:var(--greenglow);color:var(--green);}
-.badge-yellow{background:var(--yellowglow);color:var(--yellow);}
-.badge-red{background:var(--redglow);color:var(--red);}
-.badge-pink{background:var(--accentglow);color:var(--accent);}
-.badge-blue{background:var(--blueglow);color:var(--blue);}
-.badge-purple{background:var(--purpleglow);color:var(--purple);}
-.badge-muted{background:var(--surface3);color:var(--muted);}
-.code-block{background:#050709;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;line-height:1.7;overflow-y:auto;white-space:pre-wrap;word-break:break-all;color:#adbac7;}
-.log-box{background:#050709;border-radius:8px;padding:10px;max-height:220px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.8;}
-.ll .ts{color:#3a4a5a;margin-right:6px;}
-.ll.ok .tag{color:var(--green);}
-.ll.err .tag{color:var(--red);}
-.ll.warn .tag{color:var(--yellow);}
-.ll.info .tag{color:var(--blue);}
-.ll .msg{color:var(--soft);}
-.cr{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:6px;cursor:pointer;border:1.5px solid transparent;transition:all 0.12s;}
-.cr:hover{border-color:rgba(242,132,158,0.3);}
-.cr.sel{border-color:var(--accent);background:var(--accentglow);}
-.cr-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;overflow:hidden;}
-.cr-av img{width:100%;height:100%;object-fit:cover;}
-.cr-info{flex:1;min-width:0;}
-.cr-name{font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cr-meta{font-size:10px;color:var(--muted);margin-top:1px;font-family:var(--mono);}
-.cr-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
-.stamp-row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
-.sd{width:32px;height:32px;border-radius:50%;border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s;}
-.sd.on{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:var(--accent2);}
-.tl-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
-.tl-item:last-child{border-bottom:none;}
-.tl-icon{width:28px;height:28px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
-.tl-body .tt{font-size:12px;font-weight:600;}
-.tl-body .td{font-size:11px;color:var(--muted);}
-.tl-body .ts2{font-size:10px;color:rgba(255,255,255,0.2);font-family:var(--mono);}
-.sc-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;display:flex;flex-direction:column;gap:8px;}
-.sc-card h4{font-size:12px;font-weight:700;}
-.sc-card p{font-size:11px;color:var(--muted);line-height:1.45;}
-hr.div{border:none;border-top:1px solid var(--border);margin:14px 0;}
-.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
-.stat-row:last-child{border-bottom:none;}
-.stat-row .sv2{font-weight:700;font-family:var(--mono);}
-.pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.search-wrap{position:relative;margin-bottom:12px;}
-.search-wrap input{padding-left:32px;}
-.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;}
-.prog{height:5px;background:var(--surface3);border-radius:99px;overflow:hidden;margin-top:6px;}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:99px;transition:width 0.3s;}
-.chart-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:11px;}
-.chart-bar-label{width:80px;text-align:right;color:var(--muted);flex-shrink:0;font-family:var(--mono);}
-.chart-bar-track{flex:1;height:22px;background:var(--surface2);border-radius:4px;overflow:hidden;}
-.chart-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;transition:width 0.4s;}
-.chart-bar-val{margin-left:6px;color:var(--muted);font-family:var(--mono);}
-.health-item{display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;}
-.health-icon{font-size:16px;flex-shrink:0;}
-.health-body .ht{font-size:12px;font-weight:700;}
-.health-body .hd{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
-.health-badge{margin-left:auto;flex-shrink:0;}
-.export-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
-.export-row:last-child{border-bottom:none;}
-.export-row .ed{font-size:11px;color:var(--muted);margin-top:2px;}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:11px 16px;font-size:12px;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;max-width:280px;}
-.toast.show{transform:translateY(0);opacity:1;}
-.toast.ok{border-left:3px solid var(--green);}
-.toast.err{border-left:3px solid var(--red);}
-.toast.warn{border-left:3px solid var(--yellow);}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:200;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;width:480px;max-width:90vw;max-height:80vh;overflow-y:auto;}
-.modal h3{font-size:15px;font-weight:800;margin-bottom:6px;}
-.modal .msub{font-size:12px;color:var(--muted);margin-bottom:18px;}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
-.undo-bar{position:fixed;bottom:70px;right:24px;background:var(--surface3);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:10px;z-index:198;transform:translateY(120px);opacity:0;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);}
-.undo-bar.show{transform:translateY(0);opacity:1;}
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
+
+/* ── Layout ── */
+.shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.sidebar { background: var(--panel); border-right: 1px solid var(--border); padding: 16px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.main { padding: 24px; overflow-y: auto; }
+
+/* ── Sidebar ── */
+.sidebar-brand { padding: 8px 18px 20px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.sidebar-brand h1 { font-size: 15px; font-weight: 800; color: var(--accent); }
+.sidebar-brand p  { font-size: 10px; color: var(--soft); margin-top: 2px; }
+.nav-section { padding: 4px 10px; font-size: 9px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--soft); margin: 12px 0 4px; }
+.nav-btn { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 18px; background: none; border: none; color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; text-align: left; border-left: 3px solid transparent; transition: all 0.15s; }
+.nav-btn:hover  { background: rgba(242,132,158,0.08); color: var(--accent); }
+.nav-btn.active { background: rgba(242,132,158,0.12); color: var(--accent); border-left-color: var(--accent); }
+.nav-btn .icon  { font-size: 15px; width: 18px; text-align: center; }
+
+/* ── Panels ── */
+.panel { display: none; }
+.panel.active { display: block; }
+.panel-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.panel-sub   { font-size: 12px; color: var(--soft); margin-bottom: 20px; }
+
+/* ── Cards ── */
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+.card-title { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--soft); margin-bottom: 14px; }
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ── Buttons ── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 8px; border: none; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.btn:active { transform: scale(0.96); }
+.btn-pink   { background: var(--accent2); color: #fff; }
+.btn-pink:hover { background: #c94070; }
+.btn-green  { background: var(--green); color: #fff; }
+.btn-green:hover { background: #27ae60; }
+.btn-red    { background: var(--red); color: #fff; }
+.btn-red:hover { background: #c0392b; }
+.btn-blue   { background: var(--blue); color: #fff; }
+.btn-blue:hover { background: #2980b9; }
+.btn-yellow { background: var(--yellow); color: #111; }
+.btn-yellow:hover { background: #d4ac0d; }
+.btn-purple { background: var(--purple); color: #fff; }
+.btn-purple:hover { background: #8e44ad; }
+.btn-ghost  { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover { background: rgba(255,255,255,0.1); }
+.btn-full   { width: 100%; }
+.btn-sm     { padding: 6px 12px; font-size: 11px; }
+
+/* ── Form controls ── */
+label { display: block; font-size: 11px; font-weight: 700; color: var(--soft); margin-bottom: 5px; }
+input, select, textarea {
+  width: 100%; background: var(--panel2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 12px; color: var(--text);
+  font-family: var(--font); font-size: 13px; outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+select option { background: var(--panel2); }
+.form-row { margin-bottom: 12px; }
+.form-inline { display: flex; gap: 8px; align-items: flex-end; }
+.form-inline input { flex: 1; }
+
+/* ── Customer selector ── */
+.customer-selector { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-end; }
+.customer-selector label { margin-bottom: 5px; }
+.customer-selector select { flex: 1; }
+
+/* ── Customer list ── */
+.customer-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--panel2); border-radius: 8px; margin-bottom: 8px; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; }
+.customer-row:hover { border-color: var(--accent); }
+.customer-row.selected { border-color: var(--accent); background: rgba(242,132,158,0.08); }
+.cr-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #F2849E, #E05580); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; overflow: hidden; }
+.cr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cr-info { flex: 1; min-width: 0; }
+.cr-name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-meta { font-size: 11px; color: var(--soft); margin-top: 2px; }
+.cr-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+.badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; }
+.badge-green  { background: rgba(46,204,113,0.15); color: var(--green); }
+.badge-yellow { background: rgba(241,196,15,0.15);  color: var(--yellow); }
+.badge-red    { background: rgba(231,76,60,0.15);   color: var(--red); }
+.badge-pink   { background: rgba(242,132,158,0.15); color: var(--accent); }
+.badge-purple { background: rgba(155,89,182,0.15);  color: var(--purple); }
+.badge-blue   { background: rgba(52,152,219,0.15);  color: var(--blue); }
+
+/* ── Stamp display ── */
+.stamp-grid { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.stamp-dot  { width: 36px; height: 36px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
+.stamp-dot.filled { background: linear-gradient(135deg, #F2849E, #E05580); border-color: var(--accent2); }
+
+/* ── Log ── */
+.log-wrap { background: #0a0c12; border-radius: 8px; padding: 12px; max-height: 260px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.7; }
+.log-line { padding: 1px 0; }
+.log-ts   { color: #555; margin-right: 6px; }
+.log-ok   { color: var(--green); }
+.log-warn { color: var(--yellow); }
+.log-err  { color: var(--red); }
+.log-info { color: var(--blue); }
+.log-action { color: var(--accent); }
+
+/* ── JSON viewer ── */
+.json-wrap { background: #0a0c12; border-radius: 8px; padding: 12px; max-height: 360px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; line-height: 1.6; color: #adbac7; }
+
+/* ── Status bar ── */
+.status-bar { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--panel2); border-radius: 8px; margin-bottom: 16px; font-size: 12px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+.status-dot.offline { background: var(--red); animation: none; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Activity timeline ── */
+.activity-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--panel2); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
+.activity-text .title { font-size: 12px; font-weight: 700; }
+.activity-text .desc  { font-size: 11px; color: var(--soft); margin-top: 1px; }
+.activity-text .ts    { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+
+/* ── Firebase viewer ── */
+.fb-node { margin: 3px 0; }
+.fb-key   { color: #79c0ff; }
+.fb-val   { color: #a5d6ff; }
+.fb-str   { color: #a8ff78; }
+.fb-num   { color: #ff9c6e; }
+.fb-bool  { color: #d2a8ff; }
+.fb-null  { color: #8b949e; }
+
+/* ── Scenario cards ── */
+.scenario-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.scenario-card h4 { font-size: 12px; font-weight: 700; }
+.scenario-card p  { font-size: 11px; color: var(--soft); line-height: 1.4; }
+
+/* ── Misc ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.danger-zone { border: 1px solid rgba(231,76,60,0.3); background: rgba(231,76,60,0.05); }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.stat-row:last-child { border-bottom: none; }
+.stat-val { font-weight: 700; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; font-weight: 600; z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok   { border-left: 4px solid var(--green); }
+.toast.err  { border-left: 4px solid var(--red); }
+.toast.warn { border-left: 4px solid var(--yellow); }
 </style>
 </head>
 <body>
+
 <div class="shell">
-<nav class="sidebar">
-  <div class="sidebar-head">
-    <div class="sidebar-logo"><div class="logo-icon">⚡</div><h1>SG <span>DevTools</span></h1></div>
-    <div class="sidebar-tagline">v2.0 · shumai-gosh</div>
-  </div>
-  <div class="sidebar-scroll">
-    <div class="nav-group">Overview</div>
-    <button class="nav-btn active" onclick="nav('pDash')" id="nav-pDash"><span class="ni">📊</span>Dashboard<span class="nbadge" id="nb-dash">—</span></button>
-    <div class="nav-group">Customers</div>
-    <button class="nav-btn" onclick="nav('pCust')" id="nav-pCust"><span class="ni">👥</span>All Customers<span class="nbadge" id="nb-cust">0</span></button>
-    <button class="nav-btn" onclick="nav('pReg')" id="nav-pReg"><span class="ni">➕</span>Register</button>
-    <button class="nav-btn" onclick="nav('pBulk')" id="nav-pBulk"><span class="ni">⚡</span>Bulk Ops</button>
-    <div class="nav-group">Stamp &amp; Reward</div>
-    <button class="nav-btn" onclick="nav('pStamps')" id="nav-pStamps"><span class="ni">🥟</span>Stamp Control</button>
-    <button class="nav-btn" onclick="nav('pRewards')" id="nav-pRewards"><span class="ni">🎁</span>Reward Control</button>
-    <button class="nav-btn" onclick="nav('pSelfie')" id="nav-pSelfie"><span class="ni">🤳</span>Selfie / Bonus</button>
-    <button class="nav-btn" onclick="nav('pScenarios')" id="nav-pScenarios"><span class="ni">🧪</span>Scenarios</button>
-    <button class="nav-btn" onclick="nav('pQR')" id="nav-pQR"><span class="ni">📱</span>QR Simulator</button>
-    <div class="nav-group">Data &amp; Analysis</div>
-    <button class="nav-btn" onclick="nav('pAnalytics')" id="nav-pAnalytics"><span class="ni">📈</span>Analytics</button>
-    <button class="nav-btn" onclick="nav('pActivity')" id="nav-pActivity"><span class="ni">📋</span>Activity Log</button>
-    <button class="nav-btn" onclick="nav('pFirebase')" id="nav-pFirebase"><span class="ni">🔥</span>Firebase Live</button>
-    <button class="nav-btn" onclick="nav('pRaw')" id="nav-pRaw"><span class="ni">{}</span>Raw JSON</button>
-    <button class="nav-btn" onclick="nav('pExport')" id="nav-pExport"><span class="ni">📤</span>Export</button>
-    <div class="nav-group">Tools</div>
-    <button class="nav-btn" onclick="nav('pHealth')" id="nav-pHealth"><span class="ni">🩺</span>Health Check<span class="nbadge" id="nb-health">—</span></button>
-    <button class="nav-btn" onclick="nav('pUndo')" id="nav-pUndo"><span class="ni">↩️</span>Undo History<span class="nbadge" id="nb-undo">0</span></button>
-    <button class="nav-btn" onclick="nav('pLog')" id="nav-pLog"><span class="ni">🖥</span>Dev Log</button>
-    <div class="nav-group">Danger</div>
-    <button class="nav-btn" onclick="nav('pReset')" id="nav-pReset"><span class="ni">💣</span>Reset / Wipe</button>
-  </div>
-  <div class="sidebar-source">
-    <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Data Source</div>
-    <div class="source-toggle">
-      <button class="source-btn active" id="srcBoth" onclick="setSrc('both')">Both</button>
-      <button class="source-btn" id="srcFb" onclick="setSrc('firebase')">🔥 FB</button>
-      <button class="source-btn" id="srcLs" onclick="setSrc('local')">💾 LS</button>
-    </div>
-  </div>
-</nav>
-<main class="main">
-  <div class="topbar">
-    <div class="topbar-title" id="topTitle">Dashboard</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
-      <button class="btn btn-ghost btn-sm" onclick="refresh()">↻ Refresh</button>
-      <div class="status-pill connecting" id="sPill"><div class="status-dot pulse" id="sDot"></div><span id="sTxt">Connecting…</span></div>
-    </div>
-  </div>
 
-  <!-- DASHBOARD -->
-  <div class="panel active" id="pDash">
-    <div class="stat-grid">
-      <div class="stat-box pink"><div class="sv" id="ds0">—</div><div class="sl">Customers</div></div>
-      <div class="stat-box green"><div class="sv" id="ds1">—</div><div class="sl">Total Claims</div></div>
-      <div class="stat-box yellow"><div class="sv" id="ds2">—</div><div class="sl">Awaiting Claim</div></div>
-      <div class="stat-box blue"><div class="sv" id="ds3">—</div><div class="sl">Total Stamps</div></div>
-      <div class="stat-box purple"><div class="sv" id="ds4">—</div><div class="sl">Have Selfie</div></div>
-      <div class="stat-box green"><div class="sv" id="ds5">—</div><div class="sl">Bonus Active</div></div>
-      <div class="stat-box pink"><div class="sv" id="ds6">—</div><div class="sl">Avg Stamps</div></div>
-      <div class="stat-box blue"><div class="sv" id="ds7">—</div><div class="sl">ID Counter</div></div>
+  <!-- ═══════════════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════════════ -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <h1>🛠 SG Dev Tools</h1>
+      <p>Shumai-Gosh! Rewards — Internal</p>
     </div>
-    <div class="g2">
-      <div class="card"><div class="card-title">Stamp Distribution</div><div id="chartSD" style="margin-top:8px;"></div></div>
-      <div class="card"><div class="card-title">Reward States</div><div id="chartRS" style="margin-top:8px;"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><div class="card-title">Recent Activity</div><button class="btn btn-ghost btn-xs" onclick="nav('pActivity')">View all →</button></div>
-      <div id="dashAct"></div>
-    </div>
-  </div>
 
-  <!-- CUSTOMERS -->
-  <div class="panel" id="pCust">
-    <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-end;">
-      <div style="flex:1;" class="search-wrap"><input id="cSearch" placeholder="Search ID, name, mobile…" oninput="renderCust()"></div>
-      <select id="cFilt" onchange="renderCust()" style="width:140px;"><option value="all">All States</option><option value="UNLOCKED">Awaiting Claim</option><option value="CLAIMED">Claimed</option><option value="LOCKED">Locked</option></select>
-      <select id="cSort" onchange="renderCust()" style="width:150px;"><option value="newest">Newest First</option><option value="oldest">Oldest First</option><option value="stamps_desc">Most Stamps</option><option value="stamps_asc">Fewest Stamps</option><option value="claimed_desc">Most Claimed</option><option value="name_az">Name A–Z</option></select>
-      <button class="btn btn-blue btn-sm" onclick="pullFB()">🔥 Pull Firebase</button>
-    </div>
-    <div id="cCount" style="font-size:11px;color:var(--muted);margin-bottom:10px;"></div>
-    <div id="cList"></div>
-    <div class="card" id="cDetailCard" style="display:none;margin-top:14px;">
-      <div class="card-hdr"><div class="card-title">Detail — <span id="cDetailId" style="color:var(--accent);"></span></div>
-        <div style="display:flex;gap:6px;"><button class="btn btn-yellow btn-xs" onclick="openEditModal()">✏️ Edit</button><button class="btn btn-red btn-xs" onclick="delSelected()">🗑 Delete</button></div>
-      </div>
-      <div id="cDetailBody"></div>
-    </div>
-  </div>
+    <div class="nav-section">Testing</div>
+    <button class="nav-btn active" onclick="showPanel('panelCustomers')" id="nav-panelCustomers">
+      <span class="icon">👥</span> Customers
+    </button>
+    <button class="nav-btn" onclick="showPanel('panelStamps')" id="nav-panelStamps">
+      <span class="icon">🥟</span> Stamp Control
+    </button>
+    <button class="nav-btn" onclick="showPanel('panelRewards')" id="nav-panelRewards">
+      <span class="icon">🎁</span> Reward Control
+    </button>
+    <button class="nav-btn" onclick="showPanel('panelSelfie')" id="nav-panelSelfie">
+      <span class="icon">🤳</span> Selfie / Bonus
+    </button>
+    <button class="nav-btn" onclick="showPanel('panelScenarios')" id="nav-panelScenarios">
+      <span class="icon">⚡</span> Quick Scenarios
+    </button>
 
-  <!-- REGISTER -->
-  <div class="panel" id="pReg">
-    <div class="card" style="max-width:520px;">
-      <div class="card-title" style="margin-bottom:14px;">New Test Customer</div>
-      <div class="g2">
-        <div class="form-row"><label class="fl">Full Name</label><input id="rName" value="Test Customer"></div>
-        <div class="form-row"><label class="fl">Mobile</label><input id="rMobile" value="09000000001"></div>
-        <div class="form-row"><label class="fl">PIN</label><input id="rPin" value="1234" maxlength="4"></div>
-        <div class="form-row"><label class="fl">Starting Stamps</label><input id="rStamps" type="number" min="0" max="50" value="0"></div>
-      </div>
-      <div class="form-row"><label class="fl">Reward State</label><select id="rRState"><option value="auto">Auto</option><option value="LOCKED">LOCKED</option><option value="UNLOCKED">UNLOCKED</option><option value="CLAIMED">CLAIMED</option></select></div>
-      <div class="g2" style="margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" id="rSelfie" style="width:auto;margin:0;"> Add fake selfie</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" id="rBonus" style="width:auto;margin:0;"> Enable bonus</label>
-      </div>
-      <hr class="div">
-      <button class="btn btn-pink btn-full" onclick="doRegister()">➕ Register Customer</button>
-    </div>
-    <div class="card" style="max-width:520px;">
-      <div class="card-title" style="margin-bottom:10px;">Batch Register</div>
-      <div class="form-row"><label class="fl">Count</label><input id="bCount" type="number" value="5" min="1" max="50"></div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Auto-generates names, mobiles, and random stamps 0–8.</div>
-      <button class="btn btn-ghost btn-full" onclick="doBatch()">⚡ Batch Register</button>
-    </div>
-  </div>
+    <div class="nav-section">Data</div>
+    <button class="nav-btn" onclick="showPanel('panelActivity')" id="nav-panelActivity">
+      <span class="icon">📋</span> Activity Log
+    </button>
+    <button class="nav-btn" onclick="showPanel('panelFirebase')" id="nav-panelFirebase">
+      <span class="icon">🔥</span> Firebase Viewer
+    </button>
+    <button class="nav-btn" onclick="showPanel('panelRaw')" id="nav-panelRaw">
+      <span class="icon">{ }</span> Raw JSON
+    </button>
 
-  <!-- BULK OPS -->
-  <div class="panel" id="pBulk">
-    <div class="card">
-      <div class="card-title">Select Targets</div>
-      <div class="pill-row" id="bulkPills"></div>
-      <div class="g2" style="margin-bottom:10px;">
-        <button class="btn btn-ghost btn-sm" onclick="bkAll()">✓ All</button>
-        <button class="btn btn-ghost btn-sm" onclick="bkNone()">✗ None</button>
-        <button class="btn btn-ghost btn-sm" onclick="bkWhere('UNLOCKED')">Select Awaiting</button>
-        <button class="btn btn-ghost btn-sm" onclick="bkWhere('LOCKED')">Select Locked</button>
-      </div>
-      <div style="font-size:11px;color:var(--muted);" id="bkCount">0 selected</div>
-    </div>
-    <div class="g2">
-      <div class="card"><div class="card-title">Award Stamps</div><div class="form-row"><label class="fl">Add</label><input id="bkAdd" type="number" value="1" min="1" max="10"></div><button class="btn btn-green btn-full" onclick="bkAward()">➕ Award to Selected</button></div>
-      <div class="card"><div class="card-title">Set Stamps</div><div class="form-row"><label class="fl">Set to</label><input id="bkSet" type="number" value="5" min="0" max="50"></div><button class="btn btn-blue btn-full" onclick="bkSetStamps()">✏️ Set for Selected</button></div>
-      <div class="card"><div class="card-title">Bulk Reset Reward</div><p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Reset reward to LOCKED for all selected.</p><button class="btn btn-red btn-full" onclick="bkReset()">🔒 Reset for Selected</button></div>
-      <div class="card"><div class="card-title">Bulk Force Unlock</div><p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Force UNLOCKED for all selected.</p><button class="btn btn-yellow btn-full" onclick="bkUnlock()">🔓 Unlock for Selected</button></div>
-    </div>
-  </div>
+    <div class="nav-section">Danger</div>
+    <button class="nav-btn" onclick="showPanel('panelReset')" id="nav-panelReset">
+      <span class="icon">💣</span> Reset / Wipe
+    </button>
+  </nav>
 
-  <!-- STAMPS -->
-  <div class="panel" id="pStamps">
-    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;">
-      <div style="flex:1;"><label class="fl">Target Customer</label><select id="stTarget" onchange="refreshSV()"></select></div>
-      <button class="btn btn-ghost btn-sm" onclick="refresh()">↻</button>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><div class="card-title">Current Stamps</div><span id="stLabel" style="font-size:11px;color:var(--muted);font-family:var(--mono);"></span></div>
-      <div class="stamp-row" id="stDots"></div>
-      <div class="prog"><div class="prog-fill" id="stProg" style="width:0%"></div></div>
-    </div>
-    <div class="g2">
-      <div class="card"><div class="card-title">Award</div><div class="form-row"><label class="fl">Count</label><input id="stAdd" type="number" min="1" max="20" value="1"></div><button class="btn btn-green btn-full" onclick="doAward()">➕ Award Stamps</button></div>
-      <div class="card"><div class="card-title">Set Exact</div><div class="form-row"><label class="fl">Set to</label><input id="stSet" type="number" min="0" max="100" value="5"></div><button class="btn btn-blue btn-full" onclick="doSet()">✏️ Set Stamps</button></div>
-    </div>
-    <div class="card"><div class="card-title">Quick Set</div><div class="pill-row">
-      <button class="btn btn-ghost btn-sm" onclick="qs(0)">0</button>
-      <button class="btn btn-ghost btn-sm" onclick="qs(1)">1</button>
-      <button class="btn btn-ghost btn-sm" onclick="qs(2)">2</button>
-      <button class="btn btn-ghost btn-sm" onclick="qs(3)">3</button>
-      <button class="btn btn-ghost btn-sm" onclick="qs(4)">4 — almost</button>
-      <button class="btn btn-yellow btn-sm" onclick="qs(5)">5 — REWARD</button>
-      <button class="btn btn-ghost btn-sm" onclick="qs(10)">10 (×2)</button>
-      <button class="btn btn-ghost btn-sm" onclick="qs(15)">15 (×3)</button>
-    </div></div>
-    <div class="card danger"><div class="card-title">Remove</div><div class="form-row"><label class="fl">Remove</label><input id="stRem" type="number" min="1" max="50" value="1"></div><button class="btn btn-red" onclick="doRem()">➖ Remove Stamps</button></div>
-  </div>
+  <!-- ═══════════════════════════════════════════════════
+       MAIN
+  ════════════════════════════════════════════════════ -->
+  <main class="main">
 
-  <!-- REWARDS -->
-  <div class="panel" id="pRewards">
-    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;">
-      <div style="flex:1;"><label class="fl">Target</label><select id="rwTarget" onchange="refreshRV()"></select></div>
-      <button class="btn btn-ghost btn-sm" onclick="refresh()">↻</button>
+    <!-- Firebase status -->
+    <div class="status-bar" id="statusBar">
+      <div class="status-dot offline" id="statusDot"></div>
+      <span id="statusText">Connecting to Firebase…</span>
     </div>
-    <div class="card"><div class="card-title">Current State</div><div id="rwBody"></div></div>
-    <div class="g3">
-      <div class="card"><div class="card-title">Force Unlock</div><p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Sets UNLOCKED — customer sees reward banner.</p><button class="btn btn-yellow btn-full" onclick="doUnlock()">🔓 Force Unlock</button></div>
-      <div class="card"><div class="card-title">Force Claim</div><p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Marks CLAIMED, increments counter.</p><button class="btn btn-green btn-full" onclick="doClaim()">✅ Force Claim</button></div>
-      <div class="card"><div class="card-title">Reset Locked</div><p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Clears all reward flags.</p><button class="btn btn-red btn-full" onclick="doRwReset()">🔒 Reset</button></div>
-    </div>
-    <div class="card"><div class="card-title">Bonus Reward</div><div id="bonusBody" style="font-size:12px;margin-bottom:12px;"></div><div class="g2"><button class="btn btn-purple" onclick="doBonus(true)">🥤 Enable Bonus</button><button class="btn btn-ghost" onclick="doBonus(false)">✖ Disable Bonus</button></div></div>
-  </div>
 
-  <!-- SELFIE -->
-  <div class="panel" id="pSelfie">
-    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;">
-      <div style="flex:1;"><label class="fl">Target</label><select id="sfTarget" onchange="refreshSfV()"></select></div>
-      <button class="btn btn-ghost btn-sm" onclick="refresh()">↻</button>
-    </div>
-    <div class="g2">
-      <div class="card"><div class="card-title">Selfie Status</div><div id="sfBody" style="font-size:12px;margin-bottom:14px;"></div><div class="g2"><button class="btn btn-pink" onclick="doAddSelfie()">📸 Add Fake Selfie</button><button class="btn btn-red" onclick="doRemSelfie()">🗑 Remove</button></div></div>
-      <div class="card"><div class="card-title">Bonus Logic</div>
-        <div class="stat-row"><span>Has selfie?</span><span class="sv2" id="hw1">—</span></div>
-        <div class="stat-row"><span>bonusReward</span><span class="sv2" id="hw2">—</span></div>
-        <div class="stat-row"><span>Stamps</span><span class="sv2" id="hw3">—</span></div>
-        <div class="stat-row"><span>State</span><span class="sv2" id="hw4">—</span></div>
-        <div class="stat-row" style="border:none;"><span>Expected</span><span class="sv2" id="hw5">—</span></div>
-      </div>
-    </div>
-    <div class="card"><div class="card-title">Full Simulation</div><p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Fake selfie + 5 stamps + bonusReward: true. Open main app to see 🥟🥤 modal.</p><button class="btn btn-purple btn-full" onclick="doSfBonus()">⚡ Simulate Full Selfie Bonus</button></div>
-  </div>
+    <!-- ── CUSTOMERS ── -->
+    <div class="panel active" id="panelCustomers">
+      <div class="panel-title">Customers</div>
+      <div class="panel-sub">All registered customers in localStorage. Click a row to inspect.</div>
 
-  <!-- SCENARIOS -->
-  <div class="panel" id="pScenarios">
-    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;">
-      <div style="flex:1;"><label class="fl">Target</label><select id="scTarget"></select></div>
-      <button class="btn btn-ghost btn-sm" onclick="refresh()">↻</button>
-    </div>
-    <div class="g2">
-      <div class="sc-card"><h4>🆕 Fresh Start</h4><p>0 stamps, LOCKED, no selfie.</p><button class="btn btn-ghost btn-sm" onclick="sc('fresh')">▶ Run</button></div>
-      <div class="sc-card"><h4>🥟 Almost There (4 stamps)</h4><p>One more stamp until reward.</p><button class="btn btn-ghost btn-sm" onclick="sc('almost')">▶ Run</button></div>
-      <div class="sc-card"><h4>🎁 Reward Ready (no bonus)</h4><p>5 stamps, UNLOCKED, no selfie.</p><button class="btn btn-yellow btn-sm" onclick="sc('nobonus')">▶ Run</button></div>
-      <div class="sc-card"><h4>🥟🥤 Reward + Bonus</h4><p>5 stamps, UNLOCKED, selfie+bonus active.</p><button class="btn btn-purple btn-sm" onclick="sc('withbonus')">▶ Run</button></div>
-      <div class="sc-card"><h4>✅ Veteran (3 claimed)</h4><p>3 rewards claimed, 17 total stamps.</p><button class="btn btn-ghost btn-sm" onclick="sc('veteran')">▶ Run</button></div>
-      <div class="sc-card"><h4>📸 Selfie, No Reward</h4><p>Selfie on file, only 2 stamps.</p><button class="btn btn-ghost btn-sm" onclick="sc('selfieonly')">▶ Run</button></div>
-      <div class="sc-card"><h4>🔄 Mid-Cycle (3 + 1 claimed)</h4><p>Claimed once, 3 stamps in new cycle.</p><button class="btn btn-ghost btn-sm" onclick="sc('mid')">▶ Run</button></div>
-      <div class="sc-card"><h4>💎 Power User (10 claimed)</h4><p>52 total stamps, 10 rewards claimed.</p><button class="btn btn-cyan btn-sm" onclick="sc('power')">▶ Run</button></div>
-    </div>
-    <div class="card" style="margin-top:14px;"><div class="card-title">Last Result</div><div id="scResult" style="font-size:12px;color:var(--muted);">Run a scenario to see the result.</div></div>
-  </div>
-
-  <!-- QR SIMULATOR -->
-  <div class="panel" id="pQR">
-    <div class="card" style="border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.04);margin-bottom:14px;">
-      <div style="font-size:11px;color:var(--blue);line-height:1.6;">
-        <strong>ℹ️ Staff QR Format:</strong> The QR code contains JSON with <code style="font-family:var(--mono);">customerId | passportNumber | signature | issuedAt</code>.
-        The signature is HMAC-SHA-256 of <code style="font-family:var(--mono);">customerId|passportNumber</code> using the shared secret.
-        The staff app validates it and has a 24-hour expiry window. Use "Generate QR Payload" below to create a valid test payload.
-      </div>
-    </div>
-    <div class="g2" style="margin-bottom:14px;">
       <div class="card">
-        <div class="card-title" style="margin-bottom:10px;">🔍 Scan by Customer ID</div>
-        <div class="form-row"><label class="fl">Customer ID or Passport No.</label>
-          <div class="form-inline">
-            <input id="qrInput" placeholder="SG-000001 or PASS-000001" oninput="qrLookup()">
-            <button class="btn btn-ghost btn-sm" onclick="qrLookup()">🔎</button>
+        <div class="card-title">Register Test Customer</div>
+        <div class="grid-2">
+          <div class="form-row">
+            <label>Full Name</label>
+            <input id="regName" type="text" placeholder="e.g. Test User" value="Test Customer">
+          </div>
+          <div class="form-row">
+            <label>Mobile Number</label>
+            <input id="regMobile" type="tel" placeholder="09XXXXXXXXX" value="09000000001">
           </div>
         </div>
-        <div class="form-row"><label class="fl">Or pick from list</label>
-          <select id="qrPick" onchange="document.getElementById('qrInput').value=this.value;qrLookup()"></select>
+        <div class="grid-2">
+          <div class="form-row">
+            <label>PIN</label>
+            <input id="regPin" type="text" placeholder="4 digits" value="1234" maxlength="4">
+          </div>
+          <div class="form-row">
+            <label>Starting Stamps</label>
+            <input id="regStamps" type="number" min="0" max="20" value="0">
+          </div>
+        </div>
+        <button class="btn btn-pink" onclick="registerTestCustomer()">➕ Register Test Customer</button>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">All Customers <span id="customerCount" style="color:var(--accent)"></span></div>
+          <button class="btn btn-blue btn-sm" onclick="pullAllFromFirebase()" id="pullFbBtn">🔄 Pull from Firebase</button>
+        </div>
+        <div style="margin-bottom:12px;">
+          <input id="customerSearch" type="text" placeholder="🔍  Search by ID, name, or mobile…" oninput="renderCustomerList()" style="background:var(--panel2);">
+        </div>
+        <div id="customerList">
+          <p style="color:var(--soft);font-size:12px;">No customers found.</p>
         </div>
       </div>
+
+      <div class="card" id="customerDetailCard" style="display:none">
+        <div class="card-title">Selected Customer — <span id="detailId" style="color:var(--accent)"></span></div>
+        <div id="customerDetail"></div>
+      </div>
+    </div>
+
+    <!-- ── STAMP CONTROL ── -->
+    <div class="panel" id="panelStamps">
+      <div class="panel-title">Stamp Control</div>
+      <div class="panel-sub">Manually award, remove, or set stamps on any customer.</div>
+
+      <div class="customer-selector">
+        <div style="flex:1">
+          <label>Target Customer</label>
+          <select id="stampTarget" onchange="refreshStampPreview()"></select>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh</button>
+      </div>
+
+      <!-- Stamp preview -->
       <div class="card">
-        <div class="card-title" style="margin-bottom:10px;">⚡ Quick Simulate Actions</div>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">After loading a customer below, use these to simulate staff actions.</p>
+        <div class="card-title">Current Stamps</div>
+        <div class="stamp-grid" id="stampPreview"></div>
+        <div style="font-size:12px;color:var(--soft);margin-top:8px;" id="stampPreviewText"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Award Stamps</div>
+          <div class="form-row">
+            <label>How many</label>
+            <input id="stampAwardCount" type="number" min="1" max="10" value="1">
+          </div>
+          <button class="btn btn-green btn-full" onclick="devAwardStamps()">➕ Award Stamps</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Set Exact Count</div>
+          <div class="form-row">
+            <label>Set stamps to</label>
+            <input id="stampSetVal" type="number" min="0" max="50" value="4">
+          </div>
+          <button class="btn btn-blue btn-full" onclick="devSetStamps()">✏️ Set Stamps</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Quick Set</div>
         <div class="pill-row">
-          <button class="btn btn-green btn-sm" onclick="qrAward()">🥟 +1 Stamp</button>
-          <button class="btn btn-yellow btn-sm" onclick="qrUnlock()">🔓 Force Unlock</button>
-          <button class="btn btn-pink btn-sm" onclick="qrClaim()">✅ Claim Reward</button>
-          <button class="btn btn-ghost btn-sm" onclick="qrReset()">🔒 Reset</button>
+          <button class="btn btn-ghost btn-sm" onclick="devQuickStamps(0)">0 stamps</button>
+          <button class="btn btn-ghost btn-sm" onclick="devQuickStamps(1)">1 stamp</button>
+          <button class="btn btn-ghost btn-sm" onclick="devQuickStamps(2)">2 stamps</button>
+          <button class="btn btn-ghost btn-sm" onclick="devQuickStamps(3)">3 stamps</button>
+          <button class="btn btn-ghost btn-sm" onclick="devQuickStamps(4)">4 stamps — 1 away</button>
+          <button class="btn btn-yellow btn-sm" onclick="devQuickStamps(5)">5 stamps — REWARD!</button>
+          <button class="btn btn-ghost btn-sm" onclick="devQuickStamps(10)">10 stamps (2 cycles)</button>
         </div>
-        <hr class="div">
-        <div class="card-title" style="margin-bottom:8px;">📄 Generate QR Payload</div>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Creates a signed JSON payload that the staff app will accept.</p>
-        <button class="btn btn-blue btn-full btn-sm" onclick="genQRPayload()">⚡ Generate Signed Payload</button>
-        <div id="qrPayloadOut" style="display:none;margin-top:10px;">
-          <div class="code-block" id="qrPayloadJSON" style="max-height:100px;font-size:10px;"></div>
-          <button class="btn btn-ghost btn-xs" style="margin-top:6px;" onclick="navigator.clipboard.writeText(document.getElementById('qrPayloadJSON').textContent).then(()=>toast('📋 Copied'))">📋 Copy JSON</button>
+      </div>
+
+      <div class="card danger-zone">
+        <div class="card-title" style="color:var(--red)">Remove Stamps</div>
+        <div class="form-row">
+          <label>Remove how many</label>
+          <input id="stampRemoveCount" type="number" min="1" max="50" value="1">
+        </div>
+        <button class="btn btn-red" onclick="devRemoveStamps()">➖ Remove Stamps</button>
+      </div>
+    </div>
+
+    <!-- ── REWARD CONTROL ── -->
+    <div class="panel" id="panelRewards">
+      <div class="panel-title">Reward Control</div>
+      <div class="panel-sub">Force reward states without going through the stamp flow.</div>
+
+      <div class="customer-selector">
+        <div style="flex:1">
+          <label>Target Customer</label>
+          <select id="rewardTarget" onchange="refreshRewardPreview()"></select>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Current Reward State</div>
+        <div id="rewardStateDisplay" style="font-size:13px;"></div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Force Unlock</div>
+          <p style="font-size:11px;color:var(--soft);margin-bottom:12px;">Sets state to UNLOCKED so customer sees the reward banner.</p>
+          <button class="btn btn-yellow btn-full" onclick="devForceUnlock()">🔓 Force Unlock</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Force Claim</div>
+          <p style="font-size:11px;color:var(--soft);margin-bottom:12px;">Marks reward as CLAIMED and increments rewardsClaimed counter.</p>
+          <button class="btn btn-green btn-full" onclick="devForceClaim()">✅ Force Claim</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Reset to Locked</div>
+          <p style="font-size:11px;color:var(--soft);margin-bottom:12px;">Clears all reward flags. Returns to LOCKED state.</p>
+          <button class="btn btn-red btn-full" onclick="devResetReward()">🔒 Reset Reward</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Bonus Reward (Selfie Challenge)</div>
+        <div id="bonusRewardDisplay" style="font-size:13px;margin-bottom:12px;"></div>
+        <div class="grid-2">
+          <button class="btn btn-purple" onclick="devSetBonus(true)">🥤 Enable Bonus</button>
+          <button class="btn btn-ghost" onclick="devSetBonus(false)">✖ Disable Bonus</button>
         </div>
       </div>
     </div>
-    <!-- Staff View Mockup -->
-    <div class="card" id="qrResult" style="display:none;">
-      <div class="card-hdr">
-        <div class="card-title">📱 Staff View — What Staff Sees After Scan</div>
-        <span id="qrScanTime" style="font-size:10px;font-family:var(--mono);color:var(--muted);"></span>
+
+    <!-- ── SELFIE / BONUS ── -->
+    <div class="panel" id="panelSelfie">
+      <div class="panel-title">Selfie / Bonus Reward</div>
+      <div class="panel-sub">Test the selfie challenge and bonus softdrinks reward flow.</div>
+
+      <div class="customer-selector">
+        <div style="flex:1">
+          <label>Target Customer</label>
+          <select id="selfieTarget" onchange="refreshSelfiePreview()"></select>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh</button>
       </div>
-      <div style="background:linear-gradient(135deg,#0f1420,#161c2d);border-radius:10px;padding:20px;border:1px solid rgba(242,132,158,0.2);">
-        <!-- Customer Card Mock -->
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-          <div id="qrAvatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#f2849e,#e05580);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;border:2px solid var(--accent);"></div>
-          <div style="flex:1;">
-            <div id="qrName" style="font-size:16px;font-weight:800;"></div>
-            <div id="qrMeta" style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;"></div>
+
+      <div class="card">
+        <div class="card-title">Selfie Status</div>
+        <div id="selfieStatus" style="font-size:13px;margin-bottom:14px;"></div>
+        <div class="grid-2">
+          <button class="btn btn-pink" onclick="devAddFakeSelfie()">📸 Add Fake Selfie</button>
+          <button class="btn btn-red" onclick="devRemoveSelfie()">🗑 Remove Selfie</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Selfie Challenge Full Flow Test</div>
+        <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">
+          Simulates the complete bonus scenario: adds a fake selfie → sets stamps to 5 → sets <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">bonusReward: true</code>.<br>
+          Open the main app to see the reward unlock modal show the Softdrinks bonus.
+        </p>
+        <button class="btn btn-purple btn-full" onclick="devSimulateSelfieBonus()">⚡ Simulate Full Selfie Bonus</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">How Bonus Works</div>
+        <div class="stat-row"><span>Has selfie photo?</span><span class="stat-val" id="howHasSelfie">—</span></div>
+        <div class="stat-row"><span>bonusReward flag</span><span class="stat-val" id="howBonusFlag">—</span></div>
+        <div class="stat-row"><span>Current stamps</span><span class="stat-val" id="howStamps">—</span></div>
+        <div class="stat-row"><span>Reward state</span><span class="stat-val" id="howRewardState">—</span></div>
+        <div class="stat-row"><span>Expected reward</span><span class="stat-val" id="howExpected">—</span></div>
+      </div>
+    </div>
+
+    <!-- ── QUICK SCENARIOS ── -->
+    <div class="panel" id="panelScenarios">
+      <div class="panel-title">Quick Scenarios</div>
+      <div class="panel-sub">One-click test setups for common flows.</div>
+
+      <div class="customer-selector">
+        <div style="flex:1">
+          <label>Target Customer</label>
+          <select id="scenarioTarget"></select>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="scenario-card">
+          <h4>🆕 Fresh Start</h4>
+          <p>Reset customer to 0 stamps, LOCKED reward, no selfie, no bonus.</p>
+          <button class="btn btn-ghost btn-sm" onclick="runScenario('fresh')">Run Scenario</button>
+        </div>
+        <div class="scenario-card">
+          <h4>🥟 Almost There (4 stamps)</h4>
+          <p>Set to 4 stamps. One more and they unlock the reward. No selfie.</p>
+          <button class="btn btn-ghost btn-sm" onclick="runScenario('almost')">Run Scenario</button>
+        </div>
+        <div class="scenario-card">
+          <h4>🎁 Reward Ready (no bonus)</h4>
+          <p>5 stamps, reward UNLOCKED, no selfie. Standard siomai reward only.</p>
+          <button class="btn btn-yellow btn-sm" onclick="runScenario('rewardNoBonus')">Run Scenario</button>
+        </div>
+        <div class="scenario-card">
+          <h4>🥟🥤 Reward Ready (with bonus)</h4>
+          <p>5 stamps, reward UNLOCKED, selfie on file, bonusReward: true. Siomai + Softdrinks.</p>
+          <button class="btn btn-purple btn-sm" onclick="runScenario('rewardWithBonus')">Run Scenario</button>
+        </div>
+        <div class="scenario-card">
+          <h4>✅ Veteran (3 rewards claimed)</h4>
+          <p>Customer has claimed 3 rewards. Back to 2 stamps in new cycle. No active reward.</p>
+          <button class="btn btn-ghost btn-sm" onclick="runScenario('veteran')">Run Scenario</button>
+        </div>
+        <div class="scenario-card">
+          <h4>📸 Selfie Only (no reward yet)</h4>
+          <p>Has selfie, 2 stamps. Tests that bonus doesn't show prematurely.</p>
+          <button class="btn btn-ghost btn-sm" onclick="runScenario('selfieNoReward')">Run Scenario</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">Scenario Result</div>
+        <div id="scenarioResult" style="font-size:12px;color:var(--soft);">Run a scenario above to see the result.</div>
+      </div>
+    </div>
+
+    <!-- ── ACTIVITY LOG ── -->
+    <div class="panel" id="panelActivity">
+      <div class="panel-title">Activity Log</div>
+      <div class="panel-sub">Customer activity history from localStorage.</div>
+
+      <div class="customer-selector">
+        <div style="flex:1">
+          <label>Filter by Customer (or All)</label>
+          <select id="activityTarget">
+            <option value="all">All Customers</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshActivityLog()">↻ Refresh</button>
+      </div>
+
+      <div class="card">
+        <div id="activityList" style="max-height:500px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- ── FIREBASE VIEWER ── -->
+    <div class="panel" id="panelFirebase">
+      <div class="panel-title">Firebase Viewer</div>
+      <div class="panel-sub">Live read from Realtime Database. Read-only.</div>
+
+      <div class="grid-2" style="margin-bottom:16px;">
+        <button class="btn btn-blue" onclick="fbFetch('customers')">📂 Load customers/</button>
+        <button class="btn btn-ghost" onclick="fbFetch('meta')">📂 Load meta/</button>
+        <button class="btn btn-ghost" onclick="fbFetch('passport')">📂 Load passport/</button>
+        <button class="btn btn-ghost" onclick="fbFetch('activity')">📂 Load activity/</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Firebase Data — <span id="fbPath" style="color:var(--accent)">—</span></div>
+        <div class="json-wrap" id="fbViewer">Select a node above to load data.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">meta/id_seq</div>
+        <div id="fbIdSeq" style="font-size:22px;font-weight:800;color:var(--accent);"></div>
+        <div style="font-size:11px;color:var(--soft);margin-top:4px;">Next customer will get ID: <span id="fbNextId" style="color:var(--text);font-weight:700;"></span></div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:flex-end;">
+          <div style="flex:1">
+            <label>Set id_seq manually</label>
+            <input id="fbIdSeqInput" type="number" min="0" placeholder="e.g. 5">
           </div>
-          <div id="qrStateBadge"></div>
+          <button class="btn btn-yellow btn-sm" onclick="fbSetIdSeq()">✏️ Set</button>
         </div>
-        <!-- Stamp dots -->
-        <div style="margin-bottom:14px;">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Stamp Progress</div>
-          <div id="qrDots" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;"></div>
-          <div class="prog"><div class="prog-fill" id="qrProg" style="width:0%"></div></div>
-          <div id="qrProgLabel" style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);"></div>
+      </div>
+    </div>
+
+    <!-- ── RAW JSON ── -->
+    <div class="panel" id="panelRaw">
+      <div class="panel-title">Raw JSON</div>
+      <div class="panel-sub">Direct view of localStorage data as stored.</div>
+
+      <div class="pill-row">
+        <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_customers')">customers</button>
+        <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_passports')">passports</button>
+        <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_activity')">activity</button>
+        <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_id_seq')">id_seq</button>
+        <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_active_session')">session</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Key: <span id="rawKey" style="color:var(--accent)">—</span></div>
+        <div style="margin-bottom:8px;display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="copyRaw()">📋 Copy</button>
         </div>
-        <!-- Stats row -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
-          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
-            <div id="qrTotalStamps" style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--accent);"></div>
-            <div style="font-size:10px;color:var(--muted);">Total Stamps</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
-            <div id="qrClaimed" style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--green);"></div>
-            <div style="font-size:10px;color:var(--muted);">Rewards Claimed</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
-            <div id="qrBonus" style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--purple);"></div>
-            <div style="font-size:10px;color:var(--muted);">Bonus Drink</div>
-          </div>
+        <div class="json-wrap" id="rawViewer">Select a key above.</div>
+      </div>
+    </div>
+
+    <!-- ── RESET / WIPE ── -->
+    <div class="panel" id="panelReset">
+      <div class="panel-title">Reset / Wipe</div>
+      <div class="panel-sub">Destructive operations. Irreversible.</div>
+
+      <div class="customer-selector">
+        <div style="flex:1">
+          <label>Target Customer (for single-customer actions)</label>
+          <select id="resetTarget"></select>
         </div>
-        <!-- Action result banner -->
-        <div id="qrBanner" style="border-radius:8px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;display:none;"></div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh</button>
       </div>
-      <!-- Raw data -->
-      <details style="margin-top:12px;">
-        <summary style="font-size:10px;color:var(--muted);cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Raw Customer JSON</summary>
-        <div class="code-block" id="qrRaw" style="max-height:200px;margin-top:8px;"></div>
-      </details>
-    </div>
-    <div id="qrEmpty" style="font-size:12px;color:var(--muted);padding:8px;">Enter a customer ID or passport number above to simulate a QR scan.</div>
-  </div>
 
-  <!-- ANALYTICS -->
-  <div class="panel" id="pAnalytics">
-    <div class="stat-grid">
-      <div class="stat-box pink"><div class="sv" id="an0">—</div><div class="sl">Customers</div></div>
-      <div class="stat-box green"><div class="sv" id="an1">—</div><div class="sl">Total Claims</div></div>
-      <div class="stat-box blue"><div class="sv" id="an2">—</div><div class="sl">Total Stamps</div></div>
-      <div class="stat-box purple"><div class="sv" id="an3">—</div><div class="sl">Selfie Rate</div></div>
-    </div>
-    <div class="g2">
-      <div class="card"><div class="card-title">Current Cycle Stamps</div><div id="anChart1" style="margin-top:8px;"></div></div>
-      <div class="card"><div class="card-title">Rewards Claimed per Customer</div><div id="anChart2" style="margin-top:8px;"></div></div>
-    </div>
-    <div class="card"><div class="card-title">Top Customers by Total Stamps</div>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th>ID</th><th>Name</th><th>Stamps</th><th>Claimed</th><th>State</th><th>Selfie</th></tr></thead><tbody id="anTbl"></tbody></table></div>
-    </div>
-    <div class="card"><div class="card-title">Registration Timeline</div><div id="anTimeline" style="margin-top:8px;font-size:12px;color:var(--muted);">No data.</div></div>
-  </div>
-
-  <!-- ACTIVITY -->
-  <div class="panel" id="pActivity">
-    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;">
-      <div style="flex:1;"><label class="fl">Customer</label><select id="actCust"><option value="all">All</option></select></div>
-      <div style="width:160px;"><label class="fl">Event</label><select id="actType"><option value="all">All Events</option><option value="stamp">Stamps</option><option value="rewardUnlocked">Unlocked</option><option value="rewardClaimed">Claimed</option><option value="registration">Registration</option></select></div>
-      <button class="btn btn-ghost btn-sm" onclick="renderAct()">↻</button>
-    </div>
-    <div id="actList" style="max-height:540px;overflow-y:auto;"></div>
-  </div>
-
-  <!-- FIREBASE LIVE -->
-  <div class="panel" id="pFirebase">
-    <div class="card">
-      <div class="card-title">id_seq — Customer ID Counter</div>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
-        <div style="font-size:32px;font-weight:800;font-family:var(--mono);color:var(--accent);" id="fbSeq">—</div>
-        <div style="font-size:12px;color:var(--muted);">Next: <span id="fbNext" style="color:var(--text);font-weight:700;font-family:var(--mono);"></span></div>
+      <div class="grid-2">
+        <div class="card danger-zone">
+          <div class="card-title" style="color:var(--yellow)">Delete One Customer</div>
+          <p style="font-size:11px;color:var(--soft);margin-bottom:12px;">Removes selected customer from localStorage and Firebase.</p>
+          <button class="btn btn-red btn-full" onclick="devDeleteCustomer()">🗑 Delete Customer</button>
+        </div>
+        <div class="card danger-zone">
+          <div class="card-title" style="color:var(--yellow)">Clear Activity Log</div>
+          <p style="font-size:11px;color:var(--soft);margin-bottom:12px;">Wipes all activity log entries from localStorage.</p>
+          <button class="btn btn-red btn-full" onclick="devClearActivity()">🗑 Clear Activity</button>
+        </div>
       </div>
-      <div class="form-inline"><input id="fbSeqIn" type="number" min="0" placeholder="New value" style="max-width:160px;"><button class="btn btn-yellow btn-sm" onclick="fbWriteSeq()">✏️ Set</button></div>
-    </div>
-    <div class="g2" style="margin-bottom:12px;">
-      <button class="btn btn-blue" onclick="fbLoad('customers')">📂 customers/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('meta')">📂 meta/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('passport')">📂 passport/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('activity')">📂 activity/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('auditLogs')">🔐 auditLogs/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('rewardClaims')">🎁 rewardClaims/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('stamps_log')">🥟 stamps_log/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('reward_claims_log')">📋 reward_claims_log/</button>
-      <button class="btn btn-ghost" onclick="fbLoad('rewardStateCorrections')">⚠️ stateCorrections/</button>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><div class="card-title">Node: <span id="fbNodeLbl" style="color:var(--accent);">—</span></div><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-xs" onclick="fbCopy()">📋 Copy</button><button class="btn btn-ghost btn-xs" onclick="fbRefresh()">↻</button></div></div>
-      <div class="code-block" id="fbViewer" style="max-height:400px;">Select a node above.</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Direct Write / Delete</div>
-      <div class="form-row"><label class="fl">Path</label><input id="fbWPath" placeholder="customers/SG-000001/stamps"></div>
-      <div class="form-row"><label class="fl">Value (JSON or plain)</label><input id="fbWVal" placeholder='5 or "text" or {"key":"val"}'></div>
-      <div style="display:flex;gap:8px;"><button class="btn btn-green" onclick="fbWrite()">✅ Write</button><button class="btn btn-red" onclick="fbDel2()">🗑 Delete</button></div>
-    </div>
-  </div>
 
-  <!-- RAW JSON -->
-  <div class="panel" id="pRaw">
-    <div class="pill-row">
-      <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_customers')">customers</button>
-      <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_passports')">passports</button>
-      <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_activity')">activity</button>
-      <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_cache_id_seq')">id_seq</button>
-      <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_active_session')">session</button>
-      <button class="btn btn-ghost btn-sm" onclick="showRaw('sg_activity_log')">activity_log</button>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><div class="card-title">Key: <span id="rawLbl" style="color:var(--accent);">—</span></div>
-        <div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-xs" onclick="copyRaw()">📋 Copy</button><button class="btn btn-yellow btn-xs" onclick="editRaw()">✏️ Edit</button><button class="btn btn-red btn-xs" onclick="delRaw()">🗑 Delete</button></div>
+      <div class="card danger-zone">
+        <div class="card-title" style="color:var(--red)">⚠ Wipe All localStorage</div>
+        <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Removes ALL SG keys from localStorage: customers, passports, activity, session, id_seq. Does not touch Firebase.</p>
+        <button class="btn btn-red" onclick="devWipeLocal()">💣 Wipe localStorage</button>
       </div>
-      <div class="code-block" id="rawView" style="max-height:500px;">Select a key above.</div>
-    </div>
-  </div>
 
-  <!-- EXPORT -->
-  <div class="panel" id="pExport">
-    <div class="card">
-      <div class="export-row"><div><div style="font-weight:700;">Customers CSV</div><div class="ed">All customer fields, spreadsheet-ready.</div></div><button class="btn btn-green btn-sm" onclick="expCSV('customers')">⬇ Download</button></div>
-      <div class="export-row"><div><div style="font-weight:700;">Activity Log CSV</div><div class="ed">All events with timestamps.</div></div><button class="btn btn-green btn-sm" onclick="expCSV('activity')">⬇ Download</button></div>
-      <div class="export-row"><div><div style="font-weight:700;">Firebase Snapshot JSON</div><div class="ed">Complete dump of all Firebase data.</div></div><button class="btn btn-blue btn-sm" onclick="expFirebase()">⬇ Download</button></div>
-      <div class="export-row"><div><div style="font-weight:700;">localStorage Snapshot JSON</div><div class="ed">All SG keys from localStorage.</div></div><button class="btn btn-ghost btn-sm" onclick="expLocal()">⬇ Download</button></div>
-      <div class="export-row" style="border:none;"><div><div style="font-weight:700;">Redemption Report CSV</div><div class="ed">Customers who have claimed rewards, ranked.</div></div><button class="btn btn-purple btn-sm" onclick="expRedemption()">⬇ Download</button></div>
-    </div>
-  </div>
+      <div class="card danger-zone">
+        <div class="card-title" style="color:var(--red)">⚠ Wipe Firebase customers/</div>
+        <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Deletes all records under <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">customers/</code> in Firebase Realtime Database. meta/id_seq is NOT reset.</p>
+        <button class="btn btn-red" onclick="devWipeFirebaseCustomers()">🔥 Wipe Firebase customers/</button>
+      </div>
 
-  <!-- HEALTH CHECK -->
-  <div class="panel" id="pHealth">
-    <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button class="btn btn-pink" onclick="runHealth()">🩺 Run Health Check</button>
-      <button class="btn btn-ghost btn-sm" onclick="fixAll()">🔧 Auto-Fix All</button>
+      <div class="card danger-zone" style="border-color:rgba(231,76,60,0.6);background:rgba(231,76,60,0.08);">
+        <div class="card-title" style="color:var(--red)">☢ FULL NUCLEAR WIPE</div>
+        <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Wipes <strong style="color:var(--text)">everything</strong>: localStorage + Firebase customers/ + resets id_seq to 0. Next registered account will be SG-000001. <strong style="color:var(--red)">Completely irreversible.</strong></p>
+        <button class="btn btn-red btn-full" onclick="devNuclearWipe()" style="font-size:13px;height:44px;">☢ Full Nuclear Wipe</button>
+      </div>
     </div>
-    <div id="healthOut"><div style="font-size:12px;color:var(--muted);">Click "Run Health Check" to scan your data.</div></div>
-  </div>
 
-  <!-- UNDO HISTORY -->
-  <div class="panel" id="pUndo">
-    <div id="undoList"><div style="font-size:12px;color:var(--muted);">No undo history yet.</div></div>
-  </div>
-
-  <!-- DEV LOG -->
-  <div class="panel" id="pLog">
-    <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <button class="btn btn-ghost btn-sm" onclick="renderLog()">↻ Refresh</button>
-      <button class="btn btn-red btn-sm" onclick="clearLog()">🗑 Clear</button>
-    </div>
-    <div class="log-box" id="logBox"></div>
-  </div>
-
-  <!-- RESET / WIPE -->
-  <div class="panel" id="pReset">
-    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;">
-      <div style="flex:1;"><label class="fl">Target Customer</label><select id="rstTarget"></select></div>
-    </div>
-    <div class="g2">
-      <div class="card danger"><div class="card-title">Delete One Customer</div><p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Removes from localStorage and Firebase.</p><button class="btn btn-red btn-full" onclick="delOne()">🗑 Delete Customer</button></div>
-      <div class="card danger"><div class="card-title">Clear Activity Log</div><p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Wipes all activity log entries from localStorage.</p><button class="btn btn-red btn-full" onclick="clearAct()">🗑 Clear Activity</button></div>
-    </div>
-    <div class="card danger"><div class="card-title">⚠ Wipe All localStorage</div><p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Removes all SG keys. Does NOT touch Firebase.</p><button class="btn btn-red" onclick="wipeLS()">💣 Wipe localStorage</button></div>
-    <div class="card danger"><div class="card-title">⚠ Wipe Firebase customers/</div><p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Deletes all records under customers/ in Firebase.</p><button class="btn btn-red" onclick="wipeFB()">🔥 Wipe Firebase customers/</button></div>
-    <div class="card danger" style="border-color:rgba(231,76,60,0.5);"><div class="card-title" style="color:var(--red);">☢ FULL NUCLEAR WIPE</div><p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Wipes <strong style="color:var(--text);">everything</strong>: localStorage + Firebase + id_seq reset. <strong style="color:var(--red);">Irreversible.</strong></p><button class="btn btn-red btn-full" onclick="nuclear()" style="height:44px;">☢ Full Nuclear Wipe</button></div>
-  </div>
-
-</main>
+  </main>
 </div>
 
-<!-- Edit Modal -->
-<div class="modal-bg" id="editModal">
-  <div class="modal">
-    <h3>Edit Customer</h3><div class="msub" id="emSub"></div>
-    <div class="g2">
-      <div class="form-row"><label class="fl">Name</label><input id="em-name"></div>
-      <div class="form-row"><label class="fl">Mobile</label><input id="em-mob"></div>
-      <div class="form-row"><label class="fl">Stamps</label><input id="em-stamps" type="number" min="0"></div>
-      <div class="form-row"><label class="fl">Rewards Claimed</label><input id="em-claimed" type="number" min="0"></div>
-    </div>
-    <div class="form-row"><label class="fl">Reward State</label><select id="em-state"><option value="LOCKED">LOCKED</option><option value="UNLOCKED">UNLOCKED</option><option value="CLAIMED">CLAIMED</option></select></div>
-    <div class="modal-btns"><button class="btn btn-ghost" onclick="closeM('editModal')">Cancel</button><button class="btn btn-pink" onclick="saveEdit()">💾 Save</button></div>
-  </div>
-</div>
-
-<!-- Raw Edit Modal -->
-<div class="modal-bg" id="rawEditModal">
-  <div class="modal">
-    <h3>Edit Raw JSON</h3><div class="msub">Key: <span id="reKey" style="color:var(--accent);font-family:var(--mono);"></span></div>
-    <textarea id="reArea" rows="14" style="font-family:var(--mono);font-size:11px;line-height:1.6;"></textarea>
-    <div class="modal-btns"><button class="btn btn-ghost" onclick="closeM('rawEditModal')">Cancel</button><button class="btn btn-yellow" onclick="saveRaw()">💾 Save</button></div>
-  </div>
-</div>
-
-<!-- Undo bar -->
-<div class="undo-bar" id="uBar"><span id="uMsg">Action recorded</span><button class="btn btn-ghost btn-xs" onclick="doUndo()">↩ Undo</button><button class="btn btn-ghost btn-xs" onclick="hideUBar()">✕</button></div>
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-firebase.initializeApp({apiKey:"AIzaSyAkK4KLS93gwdalrRWPnFFSEuA5iQ2cvPk",authDomain:"shumai-gosh.firebaseapp.com",databaseURL:"https://shumai-gosh-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"shumai-gosh",storageBucket:"shumai-gosh.firebasestorage.app",messagingSenderId:"62206596519",appId:"1:62206596519:web:dbfcc1d3a164ea18af5282"});
-const db=firebase.database();
-const K={C:'sg_cache_customers',I:'sg_cache_id_seq',S:'sg_active_session',P:'sg_cache_passports',A:'sg_cache_activity',A2:'sg_activity_log'};
-const RS={L:'LOCKED',U:'UNLOCKED',C:'CLAIMED'};
-const FAKE='data:image/svg+xml;base64,'+btoa('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#F2849E"/><circle cx="100" cy="80" r="45" fill="#fff" opacity="0.9"/><circle cx="100" cy="80" r="35" fill="#E05580"/><text x="100" y="90" font-size="36" text-anchor="middle" fill="#fff">🤳</text><rect x="0" y="145" width="200" height="55" fill="#E05580"/><text x="100" y="178" font-size="13" font-weight="bold" text-anchor="middle" fill="#fff" font-family="Arial">FAKE SELFIE</text></svg>');
-let src='both',selId=null,fbNode=null,rawKey=null;
-const dlog=[],undo=[];
-let tTimer,uTimer;
-const ls={g:k=>{try{return JSON.parse(localStorage.getItem(k));}catch{return null;}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){lg('err','LS:'+e.message);}},d:k=>localStorage.removeItem(k)};
-const custs=()=>ls.g(K.C)||[];
-const saveCusts=a=>ls.s(K.C,a);
-const acts=()=>{const a1=ls.g(K.A)||[];const a2=ls.g(K.A2)||[];if(!a1.length)return a2;if(!a2.length)return a1;const seen=new Set(a1.map(e=>e.timestamp+'|'+e.customerId+'|'+e.eventType));const merged=[...a1];a2.forEach(e=>{const k=e.timestamp+'|'+e.customerId+'|'+e.eventType;if(!seen.has(k))merged.push(e);});return merged.sort((a,b)=>new Date(a.timestamp||0)-new Date(b.timestamp||0));};
-const saveActs=a=>{ls.s(K.A,a);ls.s(K.A2,a);};
-const findC=id=>custs().find(c=>c.customerId===id)||null;
-const saveC=c=>{c.updatedAt=new Date().toISOString();const a=custs();const i=a.findIndex(x=>x.customerId===c.customerId);if(i>=0)a[i]=c;else a.push(c);saveCusts(a);};
-const fbp=k=>{const i=k.indexOf(':');if(i===-1)return k.replace(/[.#$[\]]/g,'_');return k.slice(0,i)+'/'+k.slice(i+1).replace(/[.#$[\]]/g,'_');};
-const fbGet=async k=>{try{const s=await db.ref(fbp(k)).once('value');return s.exists()?s.val():null;}catch{return null;}};
-const fbS=async(k,v)=>{try{await db.ref(fbp(k)).set(v);return true;}catch(e){lg('err','FB:'+e.message);return false;}};
-const fbD=async k=>{try{await db.ref(fbp(k)).remove();return true;}catch(e){lg('err','FBdel:'+e.message);return false;}};
-function lg(t,m){dlog.unshift({t,m,ts:new Date().toLocaleTimeString()});if(dlog.length>300)dlog.pop();}
-function toast(m,t='ok'){const el=document.getElementById('toast');el.textContent=m;el.className='toast show '+t;clearTimeout(tTimer);tTimer=setTimeout(()=>el.classList.remove('show'),2800);}
-function pushU(lbl){undo.unshift({lbl,ts:Date.now(),c:JSON.parse(JSON.stringify(custs())),a:JSON.parse(JSON.stringify(acts()))});if(undo.length>20)undo.pop();nb('nb-undo',undo.length);showUBar('Recorded: '+lbl);}
-function showUBar(m){const b=document.getElementById('uBar');document.getElementById('uMsg').textContent=m;b.classList.add('show');clearTimeout(uTimer);uTimer=setTimeout(hideUBar,4000);}
-function hideUBar(){document.getElementById('uBar').classList.remove('show');}
-function doUndo(){if(!undo.length){toast('Nothing to undo','warn');return;}const s=undo.shift();saveCusts(s.c);saveActs(s.a);nb('nb-undo',undo.length);toast('↩ Undid: '+s.lbl);hideUBar();refresh();}
-const rstate=c=>{const r=(c.rewardState||c.rewardStatus||'').toUpperCase();if(r==='UNLOCKED')return RS.U;if(r==='CLAIMED')return RS.C;return RS.L;};
-const sbadge=s=>s==='UNLOCKED'?'<span class="badge badge-yellow">UNLOCKED</span>':s==='CLAIMED'?'<span class="badge badge-green">CLAIMED</span>':'<span class="badge badge-muted">LOCKED</span>';
-function applyRS(c,state){c.rewardState=state;c.rewardStatus=state.toLowerCase();c.rewardReady=state===RS.U;if(state===RS.U&&!c.rewardUnlockedAt)c.rewardUnlockedAt=new Date().toISOString();if(state!==RS.U)c.rewardUnlockedAt=null;c.rewardClaimedAt=state===RS.C?new Date().toISOString():null;}
-function setSrc(s){src=s;['both','firebase','local'].forEach(x=>{const el=document.getElementById('src'+x.charAt(0).toUpperCase()+x.slice(1));if(el)el.classList.toggle('active',src===x);});toast('Source: '+s);}
-const TITLES={pDash:'Dashboard',pCust:'All Customers',pReg:'Register Customer',pBulk:'Bulk Operations',pStamps:'Stamp Control',pRewards:'Reward Control',pSelfie:'Selfie / Bonus',pScenarios:'Test Scenarios',pQR:'QR Simulator',pAnalytics:'Analytics',pActivity:'Activity Log',pFirebase:'Firebase Live',pRaw:'Raw JSON',pExport:'Export',pHealth:'Health Check',pUndo:'Undo History',pLog:'Dev Log',pReset:'Reset / Wipe'};
-function nav(id){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');const nb2=document.getElementById('nav-'+id);if(nb2)nb2.classList.add('active');document.getElementById('topTitle').textContent=TITLES[id]||id;onNav(id);}
-function onNav(id){if(id==='pDash')rDash();if(id==='pCust')renderCust();if(id==='pBulk')renderBulk();if(id==='pStamps'){popSels();refreshSV();}if(id==='pRewards'){popSels();refreshRV();}if(id==='pSelfie'){popSels();refreshSfV();}if(id==='pScenarios')popSels();if(id==='pQR')initQR();if(id==='pAnalytics')rAnalytics();if(id==='pActivity'){popSels();renderAct();}if(id==='pFirebase')fbLoadSeq();if(id==='pUndo')renderUndo();if(id==='pLog')renderLog();if(id==='pReset')popSels();}
-function nb(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
-function refresh(){const a=document.querySelector('.panel.active');if(a)onNav(a.id);nb('nb-cust',custs().length);}
-function popSels(){const c=custs();['stTarget','rwTarget','sfTarget','scTarget','actCust','rstTarget'].forEach(sid=>{const sel=document.getElementById(sid);if(!sel)return;const isAct=sid==='actCust';const prev=sel.value;sel.innerHTML=isAct?'<option value="all">All Customers</option>':'';c.forEach(x=>{const o=document.createElement('option');o.value=x.customerId;o.textContent=`${x.customerId} — ${x.fullName||x.name||'?'} (${x.stamps||0}✦)`;sel.appendChild(o);});if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;});}
-function initStatus(){db.ref('.info/connected').on('value',snap=>{const on=snap.val();const p=document.getElementById('sPill');const t=document.getElementById('sTxt');const d=document.getElementById('sDot');p.className='status-pill '+(on?'online':'offline');t.textContent=on?'Firebase connected':'Firebase offline';d.className='status-dot'+(on?' pulse':'');});}
-function rDash(){const all=custs();nb('ds0',all.length);nb('ds1',all.reduce((s,c)=>s+(c.rewardsClaimed||0),0));nb('ds2',all.filter(c=>rstate(c)===RS.U).length);nb('ds3',all.reduce((s,c)=>s+(c.stamps||0),0));nb('ds4',all.filter(c=>c.selfiePhoto).length);nb('ds5',all.filter(c=>c.bonusReward).length);nb('ds6',all.length?Math.round(all.reduce((s,c)=>s+(c.stamps||0),0)/all.length):'—');fbGet('meta/id_seq').then(v=>nb('ds7',v!=null?v:'?'));nb('nb-dash',all.length);rSDChart(all);rRSChart(all);rDashAct();}
-function bar(label,v,max,col){return`<div class="chart-bar-row"><div class="chart-bar-label">${label}</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(4,v/max*100)}%;background:${col};color:#111;">${v>0?v:''}</div></div><span class="chart-bar-val">${v}</span></div>`;}
-function rSDChart(all){const b={'0':0,'1':0,'2':0,'3':0,'4':0,'5+':0};all.forEach(c=>{const s=c.stamps||0;if(s>=5)b['5+']++;else b[String(s)]++;});const max=Math.max(...Object.values(b),1);const cols={'0':'var(--muted)','1':'var(--blue)','2':'var(--cyan)','3':'var(--accent)','4':'var(--yellow)','5+':'var(--green)'};document.getElementById('chartSD').innerHTML=Object.entries(b).map(([k,v])=>bar(k+' stamps',v,max,cols[k])).join('');}
-function rRSChart(all){const locked=all.filter(c=>rstate(c)===RS.L).length,unlocked=all.filter(c=>rstate(c)===RS.U).length,claimed=all.filter(c=>rstate(c)===RS.C).length,total=all.length||1;document.getElementById('chartRS').innerHTML=[['LOCKED',locked,'var(--muted)'],['UNLOCKED',unlocked,'var(--yellow)'],['CLAIMED',claimed,'var(--green)']].map(([k,v,col])=>bar(k,v,total,col)).join('');}
-function rDashAct(){const a=acts().slice(-6).reverse();const ic={stamp:'🥟',rewardUnlocked:'🎁',rewardClaimed:'✅',registration:'🆕'};const w=document.getElementById('dashAct');if(!a.length){w.innerHTML='<div style="font-size:12px;color:var(--muted);">No activity yet.</div>';return;}w.innerHTML=a.map(e=>`<div class="tl-item"><div class="tl-icon">${ic[e.eventType]||'📋'}</div><div class="tl-body"><div class="tt">${e.title||e.eventType}</div><div class="td">${e.customerId}</div><div class="ts2">${e.timestamp?new Date(e.timestamp).toLocaleString():'—'}</div></div></div>`).join('');}
-function renderCust(){let all=custs();const q=(document.getElementById('cSearch')?.value||'').toLowerCase();const filt=document.getElementById('cFilt')?.value||'all';const sort=document.getElementById('cSort')?.value||'newest';if(q)all=all.filter(c=>(c.customerId||'').toLowerCase().includes(q)||(c.fullName||c.name||'').toLowerCase().includes(q)||(c.mobileNumber||c.mobile||'').toLowerCase().includes(q));if(filt!=='all')all=all.filter(c=>rstate(c)===filt);const S={newest:(a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0),oldest:(a,b)=>new Date(a.createdAt||0)-new Date(b.createdAt||0),stamps_desc:(a,b)=>(b.stamps||0)-(a.stamps||0),stamps_asc:(a,b)=>(a.stamps||0)-(b.stamps||0),claimed_desc:(a,b)=>(b.rewardsClaimed||0)-(a.rewardsClaimed||0),name_az:(a,b)=>(a.fullName||a.name||'').localeCompare(b.fullName||b.name||'')};all.sort(S[sort]||S.newest);document.getElementById('cCount').textContent=`Showing ${all.length} of ${custs().length}`;nb('nb-cust',custs().length);const w=document.getElementById('cList');if(!all.length){w.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;">No customers found.</div>';return;}w.innerHTML=all.map(c=>{const s=rstate(c);const n=c.fullName||c.name||'—';const av=c.selfiePhoto?`<img src="${c.selfiePhoto}" alt="">`:c.profilePhoto?`<img src="${c.profilePhoto}" alt="">`:'🧑';return`<div class="cr ${c.customerId===selId?'sel':''}" onclick="selCust('${c.customerId}')"><div class="cr-av">${av}</div><div class="cr-info"><div class="cr-name">${n}</div><div class="cr-meta">${c.customerId} · ${c.mobileNumber||c.mobile||'—'}</div></div><div class="cr-right"><div style="display:flex;gap:4px;">${sbadge(s)}${c.selfiePhoto?'<span class="badge badge-pink">📸</span>':''}${c.bonusReward?'<span class="badge badge-purple">🥤</span>':''}</div><div style="font-size:10px;font-family:var(--mono);color:var(--muted);">${c.stamps||0}✦ ×${c.rewardsClaimed||0}</div></div><button class="btn btn-red btn-xs" style="flex-shrink:0;margin-left:6px;" onclick="event.stopPropagation();qDel('${c.customerId}','${n}')">🗑</button></div>`;}).join('');}
-function selCust(id){selId=id;renderCust();const c=findC(id);if(!c)return;document.getElementById('cDetailCard').style.display='block';document.getElementById('cDetailId').textContent=id;const n=c.fullName||c.name||'—';const s=rstate(c);document.getElementById('cDetailBody').innerHTML=`<div class="g2"><div><div class="stat-row"><span>Name</span><span class="sv2">${n}</span></div><div class="stat-row"><span>Mobile</span><span class="sv2">${c.mobileNumber||c.mobile||'—'}</span></div><div class="stat-row"><span>Passport</span><span class="sv2">${c.passportNumber||'—'}</span></div><div class="stat-row"><span>Created</span><span class="sv2">${c.createdAt?new Date(c.createdAt).toLocaleDateString():'—'}</span></div></div><div><div class="stat-row"><span>Stamps</span><span class="sv2">${c.stamps||0}</span></div><div class="stat-row"><span>Claimed</span><span class="sv2">${c.rewardsClaimed||0}</span></div><div class="stat-row"><span>State</span><span class="sv2">${sbadge(s)}</span></div><div class="stat-row"><span>Selfie</span><span class="sv2">${c.selfiePhoto?'✅':'❌'}</span></div><div class="stat-row" style="border:none;"><span>Bonus</span><span class="sv2">${c.bonusReward?'🥤':'—'}</span></div></div></div>`;}
-function qDel(id,name){if(!confirm(`Delete ${name} (${id})?`))return;pushU('Delete '+id);const all=custs().filter(c=>c.customerId!==id);saveCusts(all);const pp=ls.g(K.P)||{};delete pp[id];ls.s(K.P,pp);if(src!=='local'){fbD('customers:'+id);fbD('passport:'+id);}if(selId===id){selId=null;document.getElementById('cDetailCard').style.display='none';}toast('🗑 Deleted '+id,'warn');refresh();}
-function delSelected(){if(!selId){toast('No customer selected','warn');return;}const c=findC(selId);if(c)qDel(selId,c.fullName||c.name||selId);}
-function openEditModal(){if(!selId){toast('No customer selected','warn');return;}const c=findC(selId);if(!c)return;document.getElementById('emSub').textContent=selId;document.getElementById('em-name').value=c.fullName||c.name||'';document.getElementById('em-mob').value=c.mobileNumber||c.mobile||'';document.getElementById('em-stamps').value=c.stamps||0;document.getElementById('em-claimed').value=c.rewardsClaimed||0;document.getElementById('em-state').value=rstate(c);openM('editModal');}
-async function saveEdit(){if(!selId)return;const c=findC(selId);if(!c)return;pushU('Edit '+selId);c.name=document.getElementById('em-name').value.trim();c.fullName=c.name;const rawMob=document.getElementById('em-mob').value.trim();/* Ensure +63 prefix matches real app format */const normMob=rawMob.startsWith('+63')?rawMob:(rawMob.startsWith('0')?'+63'+rawMob.slice(1):'+63'+rawMob);c.mobile=normMob;c.mobileNumber=normMob;c.stamps=parseInt(document.getElementById('em-stamps').value)||0;c.rewardsClaimed=parseInt(document.getElementById('em-claimed').value)||0;applyRS(c,document.getElementById('em-state').value);saveC(c);if(src!=='local')await fbS('customers:'+selId,c);closeM('editModal');toast('💾 Updated');selCust(selId);refresh();}
-async function pullFB(){const btn=document.querySelector('#pCust .btn-blue');if(btn){btn.disabled=true;btn.textContent='⏳ Pulling…';}try{const snap=await db.ref('customers').once('value');if(!snap.exists()){toast('No customers in Firebase','warn');return;}const list=Object.values(snap.val());const cached=custs();let a=0,u=0;list.forEach(c=>{const i=cached.findIndex(x=>x.customerId===c.customerId);if(i>=0){cached[i]=c;u++;}else{cached.push(c);a++;}});saveCusts(cached);toast(`✅ +${a} new, ${u} updated`);refresh();}catch(e){toast('❌ '+e.message,'err');}finally{if(btn){btn.disabled=false;btn.textContent='🔥 Pull Firebase';}}}
-async function doRegister(){const name=document.getElementById('rName').value.trim(),mobile=document.getElementById('rMobile').value.trim(),pin=document.getElementById('rPin').value.trim(),stamps=parseInt(document.getElementById('rStamps').value)||0,rState=document.getElementById('rRState').value,wSelfie=document.getElementById('rSelfie').checked,wBonus=document.getElementById('rBonus').checked;if(!name||!mobile||!pin){toast('Fill in all fields','err');return;}let cid;try{const r=await db.ref('meta/id_seq').transaction(cur=>(cur||0)+1);const n=r.snapshot.val();cid='SG-'+String(n).padStart(6,'0');localStorage.setItem(K.I,String(n));}catch{cid='SG-OFFLINE-'+Date.now().toString(36).toUpperCase();}const auto=stamps>0&&stamps%5===0?RS.U:RS.L;const fs=rState==='auto'?auto:rState;/* Normalise mobile — strip leading 0, add +63 to match real app format */const normMob=mobile.replace(/^0/,'')||mobile;const mobileNumber='+63'+normMob;const c={customerId:cid,passportNumber:'PASS-'+cid.replace('SG-',''),name,fullName:name,mobile:mobileNumber,mobileNumber,pin,stamps,rewardsClaimed:0,rewardState:fs,rewardStatus:fs.toLowerCase(),rewardReady:fs===RS.U,rewardUnlockedAt:fs===RS.U?new Date().toISOString():null,rewardClaimedAt:null,bonusReward:wBonus,selfiePhoto:wSelfie?FAKE:null,createdAt:new Date().toISOString()};saveC(c);if(src!=='local')await fbS('customers:'+cid,c);toast('✅ Registered '+cid);refresh();}
-async function doBatch(){const n=parseInt(document.getElementById('bCount').value)||5;const fn=['Jess','Alex','Sam','Jamie','Morgan','Taylor','Casey','Riley','Jordan','Quinn'],ln=['Reyes','Santos','Cruz','Flores','Garcia','Lim','Tan','Ong','Bautista','Dela Cruz'];for(let i=0;i<n;i++){const name=fn[Math.floor(Math.random()*fn.length)]+' '+ln[Math.floor(Math.random()*ln.length)];const rawMob='9'+String(Math.floor(Math.random()*900000000)+100000000);const mobileNumber='+63'+rawMob;const stamps=Math.floor(Math.random()*9);let cid;try{const r=await db.ref('meta/id_seq').transaction(cur=>(cur||0)+1);cid='SG-'+String(r.snapshot.val()).padStart(6,'0');localStorage.setItem(K.I,String(r.snapshot.val()));}catch{cid='SG-OFFLINE-'+Date.now().toString(36).toUpperCase();}const st=stamps>0&&stamps%5===0?RS.U:RS.L;const c={customerId:cid,passportNumber:'PASS-'+cid.replace('SG-',''),name,fullName:name,mobile:mobileNumber,mobileNumber,pin:'1234',stamps,rewardsClaimed:0,rewardState:st,rewardStatus:st.toLowerCase(),rewardReady:st===RS.U,rewardUnlockedAt:null,rewardClaimedAt:null,bonusReward:false,selfiePhoto:null,createdAt:new Date().toISOString()};saveC(c);if(src!=='local')await fbS('customers:'+cid,c);}toast(`✅ Batch: ${n} customers`);refresh();}
-let bkSel=new Set();
-function renderBulk(){const all=custs();document.getElementById('bulkPills').innerHTML=all.map(c=>`<label style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--surface2);border-radius:6px;cursor:pointer;font-size:11px;border:1.5px solid ${bkSel.has(c.customerId)?'var(--accent)':'var(--border)'}"><input type="checkbox" style="width:auto;margin:0;" ${bkSel.has(c.customerId)?'checked':''} onchange="togBk('${c.customerId}',this.checked)"> ${c.customerId}</label>`).join('');document.getElementById('bkCount').textContent=bkSel.size+' selected';}
-function togBk(id,on){if(on)bkSel.add(id);else bkSel.delete(id);renderBulk();}
-function bkAll(){custs().forEach(c=>bkSel.add(c.customerId));renderBulk();}
-function bkNone(){bkSel.clear();renderBulk();}
-function bkWhere(s){custs().filter(c=>rstate(c)===s).forEach(c=>bkSel.add(c.customerId));renderBulk();}
-async function bkAward(){if(!bkSel.size){toast('Select customers','warn');return;}const n=parseInt(document.getElementById('bkAdd').value)||1;pushU('Bulk +'+n+' stamps ('+bkSel.size+')');for(const id of bkSel){const c=findC(id);if(!c)continue;c.stamps=(c.stamps||0)+n;const earned=Math.floor(c.stamps/5),claimed=c.rewardsClaimed||0;if(earned>claimed){applyRS(c,RS.U);c.bonusReward=!!c.selfiePhoto;}saveC(c);if(src!=='local')await fbS('customers:'+id,c);}toast(`🥟 +${n} to ${bkSel.size} customers`);refresh();}
-async function bkSetStamps(){if(!bkSel.size){toast('Select customers','warn');return;}const n=parseInt(document.getElementById('bkSet').value);if(isNaN(n)){toast('Invalid','err');return;}pushU('Bulk set='+n+' ('+bkSel.size+')');for(const id of bkSel){const c=findC(id);if(!c)continue;c.stamps=n;const earned=Math.floor(n/5),claimed=c.rewardsClaimed||0;applyRS(c,earned>claimed?RS.U:RS.L);if(earned>claimed)c.bonusReward=!!c.selfiePhoto;saveC(c);if(src!=='local')await fbS('customers:'+id,c);}toast(`Set stamps=${n} for ${bkSel.size}`);refresh();}
-async function bkReset(){if(!bkSel.size){toast('Select customers','warn');return;}pushU('Bulk reset ('+bkSel.size+')');for(const id of bkSel){const c=findC(id);if(!c)continue;applyRS(c,RS.L);c.bonusReward=false;saveC(c);if(src!=='local')await fbS('customers:'+id,c);}toast(`🔒 Reset ${bkSel.size}`,'warn');refresh();}
-async function bkUnlock(){if(!bkSel.size){toast('Select customers','warn');return;}pushU('Bulk unlock ('+bkSel.size+')');for(const id of bkSel){const c=findC(id);if(!c)continue;applyRS(c,RS.U);saveC(c);if(src!=='local')await fbS('customers:'+id,c);}toast(`🔓 Unlocked ${bkSel.size}`);refresh();}
-function refreshSV(){const id=document.getElementById('stTarget')?.value;if(!id)return;const c=findC(id);if(!c)return;const s=c.stamps||0;document.getElementById('stDots').innerHTML=Array.from({length:5},(_,i)=>`<div class="sd ${i<(s%5===0&&s>0?5:s%5)?'on':''}">🥟</div>`).join('');document.getElementById('stLabel').textContent=`${s} total · ${s%5}/5 · ×${c.rewardsClaimed||0} · ${rstate(c)}`;document.getElementById('stProg').style.width=((s%5)/5*100)+'%';}
-async function doAward(){const id=document.getElementById('stTarget').value,n=parseInt(document.getElementById('stAdd').value)||1;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;pushU('+'+n+' stamps to '+id);c.stamps=(c.stamps||0)+n;/* Match staff app: Math.floor(stamps/5) > rewardsClaimed → UNLOCKED */const earned=Math.floor(c.stamps/5);const claimed=c.rewardsClaimed||0;if(earned>claimed){applyRS(c,RS.U);c.bonusReward=!!c.selfiePhoto;}saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast(`🥟 +${n} → ${c.stamps}`);refresh();refreshSV();}
-async function doSet(){const id=document.getElementById('stTarget').value,n=parseInt(document.getElementById('stSet').value);if(!id){toast('Select a customer','warn');return;}if(isNaN(n)||n<0){toast('Invalid','err');return;}const c=findC(id);if(!c)return;pushU('Set stamps='+n+' for '+id);c.stamps=n;const earned=Math.floor(n/5),claimed=c.rewardsClaimed||0;applyRS(c,earned>claimed?RS.U:RS.L);if(earned>claimed)c.bonusReward=!!c.selfiePhoto;saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast(`✏️ Stamps=${n}`);refresh();refreshSV();}
-async function qs(n){document.getElementById('stSet').value=n;await doSet();}
-async function doRem(){const id=document.getElementById('stTarget').value,n=parseInt(document.getElementById('stRem').value)||1;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;pushU('-'+n+' stamps from '+id);c.stamps=Math.max(0,(c.stamps||0)-n);saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast(`➖ ${n} removed`,'warn');refresh();refreshSV();}
-function refreshRV(){const id=document.getElementById('rwTarget')?.value;if(!id)return;const c=findC(id);if(!c)return;const s=rstate(c),col=s===RS.U?'var(--yellow)':s===RS.C?'var(--green)':'var(--muted)';document.getElementById('rwBody').innerHTML=`<div class="stat-row"><span>State</span><span class="sv2" style="color:${col}">${s}</span></div><div class="stat-row"><span>rewardReady</span><span class="sv2">${c.rewardReady?'✅':'❌'}</span></div><div class="stat-row"><span>Claimed</span><span class="sv2">${c.rewardsClaimed||0}</span></div><div class="stat-row"><span>Unlocked at</span><span class="sv2">${c.rewardUnlockedAt?new Date(c.rewardUnlockedAt).toLocaleString():'—'}</span></div><div class="stat-row" style="border:none;"><span>Claimed at</span><span class="sv2">${c.rewardClaimedAt?new Date(c.rewardClaimedAt).toLocaleString():'—'}</span></div>`;document.getElementById('bonusBody').innerHTML=c.bonusReward?'<span style="color:var(--purple);font-weight:700;">🥤 Bonus active</span>':'<span style="color:var(--muted);">No bonus</span>';}
-async function doUnlock(){const id=document.getElementById('rwTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;pushU('Unlock '+id);applyRS(c,RS.U);saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast('🔓 Unlocked');refresh();refreshRV();}
-async function doClaim(){const id=document.getElementById('rwTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;pushU('Claim '+id);/* NOTE: stamps stay cumulative — staff app's _deriveRewardStatus uses Math.floor(stamps/5)>claimed */c.rewardsClaimed=(c.rewardsClaimed||0)+1;applyRS(c,RS.C);c.bonusReward=false;saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast('✅ Claimed (stamps kept cumulative)');refresh();refreshRV();}
-async function doRwReset(){const id=document.getElementById('rwTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;pushU('Reset reward '+id);applyRS(c,RS.L);c.bonusReward=false;saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast('🔒 Reset','warn');refresh();refreshRV();}
-async function doBonus(v){const id=document.getElementById('rwTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;c.bonusReward=v;saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast(v?'🥤 Bonus on':'✖ Bonus off',v?'ok':'warn');refreshRV();}
-function refreshSfV(){const id=document.getElementById('sfTarget')?.value;if(!id)return;const c=findC(id);if(!c)return;const has=!!c.selfiePhoto;document.getElementById('sfBody').innerHTML=has?`<span style="color:var(--green);font-weight:700;">✅ Selfie on file</span><div style="margin-top:8px;"><img src="${c.selfiePhoto}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);"></div>`:'<span style="color:var(--muted);">❌ No selfie</span>';const s=rstate(c);document.getElementById('hw1').textContent=has?'✅ Yes':'❌ No';document.getElementById('hw2').textContent=c.bonusReward?'🥤 true':'false';document.getElementById('hw3').textContent=c.stamps||0;document.getElementById('hw4').textContent=s;document.getElementById('hw5').textContent=s===RS.U&&c.bonusReward?'🥟🥤 Siomai+Drinks':s===RS.U?'🥟 Siomai only':'— No reward';}
-async function doAddSelfie(){const id=document.getElementById('sfTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;c.selfiePhoto=FAKE;saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast('📸 Selfie added');refreshSfV();}
-async function doRemSelfie(){const id=document.getElementById('sfTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;c.selfiePhoto=null;c.bonusReward=false;saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast('🗑 Selfie removed','warn');refreshSfV();}
-async function doSfBonus(){const id=document.getElementById('sfTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;pushU('Selfie bonus sim '+id);c.selfiePhoto=FAKE;c.stamps=5;applyRS(c,RS.U);c.bonusReward=true;saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast('⚡ Selfie bonus ready — open main app!');refreshSfV();}
-async function sc(type){const id=document.getElementById('scTarget').value;if(!id){toast('Select a customer','warn');return;}const c=findC(id);if(!c)return;pushU('Scenario:'+type+' on '+id);const S={fresh:{stamps:0,rewardsClaimed:0,rewardState:RS.L,rewardStatus:'locked',rewardReady:false,rewardUnlockedAt:null,rewardClaimedAt:null,selfiePhoto:null,bonusReward:false},almost:{stamps:4,rewardState:RS.L,rewardStatus:'locked',rewardReady:false,selfiePhoto:null,bonusReward:false},nobonus:{stamps:5,rewardState:RS.U,rewardStatus:'unlocked',rewardReady:true,rewardUnlockedAt:new Date().toISOString(),selfiePhoto:null,bonusReward:false},withbonus:{stamps:5,rewardState:RS.U,rewardStatus:'unlocked',rewardReady:true,rewardUnlockedAt:new Date().toISOString(),selfiePhoto:FAKE,bonusReward:true},veteran:{stamps:17,rewardsClaimed:3,rewardState:RS.L,rewardStatus:'locked',rewardReady:false,bonusReward:false},selfieonly:{stamps:2,rewardState:RS.L,rewardStatus:'locked',rewardReady:false,selfiePhoto:FAKE,bonusReward:false},mid:{stamps:3,rewardsClaimed:1,rewardState:RS.L,rewardStatus:'locked',rewardReady:false,bonusReward:false},power:{stamps:52,rewardsClaimed:10,rewardState:RS.L,rewardStatus:'locked',rewardReady:false,bonusReward:false}};Object.assign(c,S[type]);saveC(c);if(src!=='local')await fbS('customers:'+id,c);toast('⚡ Scenario applied');document.getElementById('scResult').innerHTML=`<span style="color:var(--green);font-weight:700;">✅ ${type}</span> applied to ${id}`;refresh();}
-function rAnalytics(){const all=custs();nb('an0',all.length);nb('an1',all.reduce((s,c)=>s+(c.rewardsClaimed||0),0));nb('an2',all.reduce((s,c)=>s+(c.stamps||0),0));nb('an3',all.length?Math.round(all.filter(c=>c.selfiePhoto).length/all.length*100)+'%':'—');const b1={'0 / 5':0,'1 / 5':0,'2 / 5':0,'3 / 5':0,'4 / 5':0};all.forEach(c=>{const k=((c.stamps||0)%5)+' / 5';if(k in b1)b1[k]++;});const mx1=Math.max(...Object.values(b1),1);const c1=['var(--muted)','var(--blue)','var(--cyan)','var(--accent)','var(--yellow)'];document.getElementById('anChart1').innerHTML=Object.entries(b1).map(([k,v],i)=>bar(k,v,mx1,c1[i])).join('');const b2={0:0,1:0,'2-3':0,'4-5':0,'6+':0};all.forEach(c=>{const n=c.rewardsClaimed||0;if(n===0)b2[0]++;else if(n===1)b2[1]++;else if(n<=3)b2['2-3']++;else if(n<=5)b2['4-5']++;else b2['6+']++;});const mx2=Math.max(...Object.values(b2),1);document.getElementById('anChart2').innerHTML=Object.entries(b2).map(([k,v],i)=>bar(k+' claimed',v,mx2,c1[i])).join('');const top=[...all].sort((a,b)=>(b.stamps||0)-(a.stamps||0)).slice(0,20);document.getElementById('anTbl').innerHTML=top.map((c,i)=>`<tr><td style="font-family:var(--mono);color:var(--muted);">${i+1}</td><td style="font-family:var(--mono);font-size:11px;">${c.customerId}</td><td>${c.fullName||c.name||'—'}</td><td style="font-weight:700;font-family:var(--mono);">${c.stamps||0}</td><td>${c.rewardsClaimed||0}</td><td>${sbadge(rstate(c))}</td><td>${c.selfiePhoto?'✅':'❌'}</td></tr>`).join('');const byDate={};all.forEach(c=>{if(!c.createdAt)return;const d=new Date(c.createdAt).toLocaleDateString();byDate[d]=(byDate[d]||0)+1;});const entries=Object.entries(byDate).sort(([a],[b])=>new Date(a)-new Date(b));if(!entries.length){document.getElementById('anTimeline').innerHTML='<span style="color:var(--muted);">No timestamp data.</span>';return;}const mx3=Math.max(...entries.map(([,v])=>v),1);document.getElementById('anTimeline').innerHTML=entries.map(([d,v])=>bar(d,v,mx3,'var(--blue)')).join('');}
-function renderAct(){popSels();const fid=document.getElementById('actCust')?.value||'all',ftype=document.getElementById('actType')?.value||'all';let log=acts();if(fid!=='all')log=log.filter(e=>e.customerId===fid);if(ftype!=='all')log=log.filter(e=>e.eventType===ftype);log=log.slice().reverse().slice(0,150);const ic={stamp:'🥟',rewardUnlocked:'🎁',rewardClaimed:'✅',registration:'🆕'};const w=document.getElementById('actList');if(!log.length){w.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;">No activity.</div>';return;}w.innerHTML=log.map(e=>`<div class="tl-item"><div class="tl-icon">${ic[e.eventType]||'📋'}</div><div class="tl-body"><div class="tt">${e.title||e.eventType}</div><div class="td">${e.description||''}</div><div class="ts2">${e.customerId} · ${e.timestamp?new Date(e.timestamp).toLocaleString():'—'}</div></div></div>`).join('');}
-async function fbLoadSeq(){try{const v=await fbGet('meta/id_seq');nb('fbSeq',v!=null?v:'—');document.getElementById('fbNext').textContent=v!=null?'SG-'+String(v+1).padStart(6,'0'):'—';if(!document.getElementById('fbSeqIn').value)document.getElementById('fbSeqIn').value=v!=null?v:'';}catch{}}
-async function fbWriteSeq(){const v=parseInt(document.getElementById('fbSeqIn').value);if(isNaN(v)||v<0){toast('Invalid','err');return;}await db.ref('meta/id_seq').set(v);localStorage.setItem(K.I,String(v));toast('✅ id_seq='+v);fbLoadSeq();}
-async function fbLoad(node){fbNode=node;document.getElementById('fbNodeLbl').textContent=node+'/';document.getElementById('fbViewer').textContent='Loading…';try{const snap=await db.ref(node).once('value');document.getElementById('fbViewer').textContent=JSON.stringify(snap.val(),null,2);}catch(e){document.getElementById('fbViewer').textContent='Error: '+e.message;}}
-function fbCopy(){navigator.clipboard.writeText(document.getElementById('fbViewer').textContent).then(()=>toast('📋 Copied'));}
-function fbRefresh(){if(fbNode)fbLoad(fbNode);}
-async function fbWrite(){const path=document.getElementById('fbWPath').value.trim(),raw=document.getElementById('fbWVal').value.trim();if(!path){toast('Enter path','err');return;}let val;try{val=JSON.parse(raw);}catch{val=raw;}try{await db.ref(path).set(val);toast('✅ Written');}catch(e){toast('❌ '+e.message,'err');}}
-async function fbDel2(){const path=document.getElementById('fbWPath').value.trim();if(!path){toast('Enter path','err');return;}if(!confirm('Delete: '+path+'?'))return;try{await db.ref(path).remove();toast('🗑 Deleted','warn');}catch(e){toast('❌ '+e.message,'err');}}
-function showRaw(key){rawKey=key;document.getElementById('rawLbl').textContent=key;const raw=localStorage.getItem(key);try{document.getElementById('rawView').textContent=JSON.stringify(JSON.parse(raw),null,2);}catch{document.getElementById('rawView').textContent=raw||'(empty)';}}
-function copyRaw(){navigator.clipboard.writeText(document.getElementById('rawView').textContent).then(()=>toast('📋 Copied'));}
-function editRaw(){if(!rawKey){toast('Select a key','warn');return;}const raw=localStorage.getItem(rawKey)||'';try{document.getElementById('reArea').value=JSON.stringify(JSON.parse(raw),null,2);}catch{document.getElementById('reArea').value=raw;}document.getElementById('reKey').textContent=rawKey;openM('rawEditModal');}
-function saveRaw(){const v=document.getElementById('reArea').value;try{JSON.parse(v);localStorage.setItem(rawKey,v);showRaw(rawKey);closeM('rawEditModal');toast('💾 Saved');refresh();}catch(e){toast('Invalid JSON: '+e.message,'err');}}
-function delRaw(){if(!rawKey){toast('Select a key','warn');return;}if(!confirm('Delete key: '+rawKey+'?'))return;ls.d(rawKey);document.getElementById('rawView').textContent='(deleted)';toast('🗑 Deleted','warn');refresh();}
-function dl(name,content,type='text/plain'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();}
-function expCSV(type){if(type==='customers'){const all=custs();if(!all.length){toast('No customers','warn');return;}const keys=['customerId','name','fullName','mobile','mobileNumber','stamps','rewardsClaimed','rewardState','selfiePhoto','bonusReward','createdAt'];const rows=[keys.join(','),...all.map(c=>keys.map(k=>{const v=c[k];if(k==='selfiePhoto')return v?'"[photo]"':'""';return typeof v==='string'?`"${v.replace(/"/g,'""')}"`:v??'';}).join(','))];dl('sg_customers_'+Date.now()+'.csv',rows.join('\n'),'text/csv');toast('⬇ CSV downloaded');}else{const log=acts();if(!log.length){toast('No activity','warn');return;}const keys=['customerId','eventType','title','description','timestamp'];const rows=[keys.join(','),...log.map(e=>keys.map(k=>{const v=e[k];return typeof v==='string'?`"${v.replace(/"/g,'""')}"`:v??'';}).join(','))];dl('sg_activity_'+Date.now()+'.csv',rows.join('\n'),'text/csv');toast('⬇ Activity CSV');}}
-async function expFirebase(){toast('⏳ Fetching…');try{const snap=await db.ref('/').once('value');dl('sg_firebase_'+Date.now()+'.json',JSON.stringify(snap.val(),null,2),'application/json');toast('⬇ Firebase JSON');}catch(e){toast('❌ '+e.message,'err');}}
-function expLocal(){const data={};[K.C,K.I,K.S,K.P,K.A,K.A2].forEach(k=>{const v=localStorage.getItem(k);if(v)try{data[k]=JSON.parse(v);}catch{data[k]=v;}});dl('sg_local_'+Date.now()+'.json',JSON.stringify(data,null,2),'application/json');toast('⬇ localStorage JSON');}
-function expRedemption(){const all=custs().filter(c=>c.rewardsClaimed>0).sort((a,b)=>(b.rewardsClaimed||0)-(a.rewardsClaimed||0));if(!all.length){toast('No redemptions','warn');return;}const rows=['Rank,ID,Name,Mobile,Claimed,Stamps,LastClaimed',...all.map((c,i)=>[i+1,c.customerId,`"${c.fullName||c.name||''}"`,c.mobileNumber||c.mobile||'',c.rewardsClaimed||0,c.stamps||0,c.rewardClaimedAt?new Date(c.rewardClaimedAt).toLocaleDateString():'—'].join(','))];dl('sg_redemption_'+Date.now()+'.csv',rows.join('\n'),'text/csv');toast('⬇ Redemption report');}
-let _hi=[];
-function runHealth(){const all=custs();const issues=[];all.forEach(c=>{if(!c.customerId)issues.push({id:'?',t:'err',m:'Missing customerId',fix:null});if(!c.name&&!c.fullName)issues.push({id:c.customerId,t:'warn',m:'Missing name',fix:()=>{c.name='Unknown';c.fullName='Unknown';saveC(c);}});if(c.stamps===undefined||c.stamps===null)issues.push({id:c.customerId,t:'warn',m:'Missing stamps',fix:()=>{c.stamps=0;saveC(c);}});if(c.stamps<0)issues.push({id:c.customerId,t:'err',m:'Negative stamps ('+c.stamps+')',fix:()=>{c.stamps=0;saveC(c);}});if(!c.rewardState&&!c.rewardStatus)issues.push({id:c.customerId,t:'warn',m:'Missing rewardState',fix:()=>{c.rewardState=RS.L;c.rewardStatus='locked';saveC(c);}});if(rstate(c)===RS.U&&(c.stamps||0)<5)issues.push({id:c.customerId,t:'warn',m:'UNLOCKED but stamps < 5',fix:null});if(c.rewardsClaimed===undefined)issues.push({id:c.customerId,t:'warn',m:'Missing rewardsClaimed',fix:()=>{c.rewardsClaimed=0;saveC(c);}});});const dupes={};all.forEach(c=>{dupes[c.customerId]=(dupes[c.customerId]||0)+1;});Object.entries(dupes).filter(([,v])=>v>1).forEach(([id,n])=>issues.push({id,t:'err',m:`Duplicate (${n}x)`,fix:null}));_hi=issues;nb('nb-health',issues.length||'✓');const w=document.getElementById('healthOut');if(!issues.length){w.innerHTML='<div class="health-item"><div class="health-icon">✅</div><div class="health-body"><div class="ht">All Clear</div><div class="hd">No issues in '+all.length+' customers.</div></div></div>';return;}w.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${issues.length} issue(s) in ${all.length} customers.</div>`+issues.map((iss,i)=>`<div class="health-item"><div class="health-icon">${iss.t==='err'?'🔴':'🟡'}</div><div class="health-body"><div class="ht">${iss.id}</div><div class="hd">${iss.m}</div></div>${iss.fix?`<button class="btn btn-ghost btn-xs health-badge" onclick="fixOne(${i})">🔧 Fix</button>`:'<span class="badge badge-red health-badge">Manual</span>'}</div>`).join('');}
-function fixOne(i){const iss=_hi[i];if(iss?.fix){iss.fix();toast('🔧 Fixed');runHealth();}}
-function fixAll(){let n=0;_hi.forEach(i=>{if(i.fix){i.fix();n++;}});toast(`🔧 Fixed ${n}`);runHealth();refresh();}
-function renderUndo(){const w=document.getElementById('undoList');if(!undo.length){w.innerHTML='<div style="font-size:12px;color:var(--muted);">No history yet.</div>';return;}w.innerHTML=undo.map((s,i)=>`<div class="tl-item"><div class="tl-icon">↩</div><div class="tl-body"><div class="tt">${s.lbl}</div><div class="ts2">${new Date(s.ts).toLocaleTimeString()}</div></div>${i===0?'<button class="btn btn-ghost btn-xs" onclick="doUndo()">Undo</button>':''}</div>`).join('');}
-function renderLog(){const w=document.getElementById('logBox');if(!dlog.length){w.innerHTML='<div style="color:var(--muted);">No entries.</div>';return;}w.innerHTML=dlog.map(e=>`<div class="ll ${e.t}"><span class="ts">${e.ts}</span><span class="tag">[${e.t.toUpperCase()}]</span> <span class="msg">${e.m}</span></div>`).join('');}
-function clearLog(){dlog.length=0;renderLog();}
-function delOne(){const id=document.getElementById('rstTarget').value;if(!id){toast('Select a customer','warn');return;}if(!confirm('Delete '+id+'?'))return;pushU('Delete '+id);const all=custs().filter(c=>c.customerId!==id);saveCusts(all);const pp=ls.g(K.P)||{};delete pp[id];ls.s(K.P,pp);if(src!=='local'){fbD('customers:'+id);fbD('passport:'+id);}toast('🗑 Deleted '+id,'warn');refresh();}
-function clearAct(){if(!confirm('Clear all activity?'))return;saveActs([]);toast('🗑 Cleared','warn');}
-function wipeLS(){if(!confirm('Wipe all localStorage SG keys?'))return;[K.C,K.I,K.S,K.P,K.A,K.A2].forEach(k=>ls.d(k));toast('💣 Wiped','err');refresh();}
-async function wipeFB(){if(!confirm('Delete all Firebase customers/?'))return;await db.ref('customers').remove();toast('🔥 Firebase wiped','err');}
-async function nuclear(){if(!confirm('☢ FULL NUCLEAR WIPE — delete everything?'))return;const c=prompt('Type WIPE to confirm:');if(c!=='WIPE'){toast('Cancelled','warn');return;}[K.C,K.I,K.S,K.P,K.A,K.A2].forEach(k=>ls.d(k));await db.ref('customers').remove();await db.ref('meta/id_seq').set(0);localStorage.setItem(K.I,'0');selId=null;document.getElementById('cDetailCard').style.display='none';toast('☢ Nuclear wipe complete','err');refresh();}
-// ── QR PAYLOAD GENERATOR ──
-const SG_QR_SECRET='ShumaGosh!QR-2025-SecureKey#v04D';
-async function genQRPayload(){if(!qrCurrent){toast('Load a customer first','warn');return;}const c=qrCurrent;const message=c.customerId+'|'+c.passportNumber;let sig;try{const enc=new TextEncoder();const key=await crypto.subtle.importKey('raw',enc.encode(SG_QR_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);const buf=await crypto.subtle.sign('HMAC',key,enc.encode(message));sig=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}catch{/* fallback hash matching staff app */const combined=SG_QR_SECRET+':'+message;let h1=0x811c9dc5,h2=0xdeadbeef;for(let i=0;i<combined.length;i++){const ch=combined.charCodeAt(i);h1=Math.imul(h1^ch,0x01000193)>>>0;h2=Math.imul(h2^ch,0x811c9dc5)>>>0;}sig=(h1>>>0).toString(16).padStart(8,'0')+(h2>>>0).toString(16).padStart(8,'0')+((h1^h2^0xabcd1234)>>>0).toString(16).padStart(8,'0')+((h1*0x1f+h2)>>>0).toString(16).padStart(8,'0');}const payload={customerId:c.customerId,passportNumber:c.passportNumber||('PASS-'+c.customerId.replace('SG-','')),signature:sig,issuedAt:new Date().toISOString()};document.getElementById('qrPayloadJSON').textContent=JSON.stringify(payload,null,2);document.getElementById('qrPayloadOut').style.display='block';toast('✅ Payload generated');}
-let qrCurrent=null;
-function initQR(){const sel=document.getElementById('qrPick');if(!sel)return;const all=custs();sel.innerHTML='<option value="">— pick a customer —</option>'+all.map(c=>`<option value="${c.customerId}">${c.customerId} — ${c.fullName||c.name||'?'}</option>`).join('');qrCurrent=null;document.getElementById('qrResult').style.display='none';document.getElementById('qrEmpty').style.display='block';}
-function qrLookup(){const q=(document.getElementById('qrInput').value||'').trim().toUpperCase();if(!q)return;const all=custs();let c=all.find(x=>x.customerId===q)||all.find(x=>(x.passportNumber||'').toUpperCase()===q)||all.find(x=>x.customerId===q.replace('PASS-','SG-'));if(!c&&q.startsWith('SG-'))c=all.find(x=>x.customerId===q);if(!c){document.getElementById('qrResult').style.display='none';document.getElementById('qrEmpty').style.display='block';document.getElementById('qrEmpty').textContent='❌ No customer found for: '+q;return;}qrCurrent=c;renderQR();}
-function renderQR(){const c=qrCurrent;if(!c)return;document.getElementById('qrResult').style.display='block';document.getElementById('qrEmpty').style.display='none';document.getElementById('qrScanTime').textContent='Scanned at '+new Date().toLocaleTimeString();const av=document.getElementById('qrAvatar');av.innerHTML=c.selfiePhoto?`<img src="${c.selfiePhoto}" style="width:100%;height:100%;object-fit:cover;">`:'🧑';document.getElementById('qrName').textContent=c.fullName||c.name||'—';document.getElementById('qrMeta').textContent=(c.customerId||'—')+' · '+(c.mobileNumber||c.mobile||'—')+' · '+(c.passportNumber||'—');const s=rstate(c);document.getElementById('qrStateBadge').innerHTML=sbadge(s);const stamps=c.stamps||0,cycle=stamps%5,prog=s===RS.U?100:cycle/5*100;const dots=Array.from({length:5},(_,i)=>`<div style="width:36px;height:36px;border-radius:50%;${i<(s===RS.U&&stamps>0?5:cycle)?'background:linear-gradient(135deg,#f2849e,#e05580);border:2px solid #e05580;':'border:2px dashed rgba(255,255,255,0.2);'}display:flex;align-items:center;justify-content:center;font-size:16px;">🥟</div>`).join('');document.getElementById('qrDots').innerHTML=dots;document.getElementById('qrProg').style.width=prog+'%';document.getElementById('qrProgLabel').textContent=`${stamps} total stamps · Cycle: ${s===RS.U&&stamps>0?5:cycle}/5 · ×${c.rewardsClaimed||0} claimed`;document.getElementById('qrTotalStamps').textContent=stamps;document.getElementById('qrClaimed').textContent=c.rewardsClaimed||0;document.getElementById('qrBonus').textContent=c.bonusReward?'🥤 Yes':'—';const banner=document.getElementById('qrBanner');if(s===RS.U){banner.style.display='block';banner.style.background='rgba(241,196,15,0.15)';banner.style.border='1px solid rgba(241,196,15,0.4)';banner.style.color='var(--yellow)';banner.textContent='🎁 REWARD READY — Customer can claim their free '+(c.bonusReward?'Siomai + Drinks 🥟🥤':'Siomai 🥟')+'!';}else if(s===RS.C){banner.style.display='block';banner.style.background='rgba(46,204,113,0.15)';banner.style.border='1px solid rgba(46,204,113,0.3)';banner.style.color='var(--green)';banner.textContent='✅ REWARD CLAIMED — Resetting for next cycle.';}else{banner.style.display='none';}document.getElementById('qrRaw').textContent=JSON.stringify(c,null,2);}
-async function qrAward(){if(!qrCurrent){toast('Load a customer first','warn');return;}const c=qrCurrent;pushU('QR +1 stamp '+c.customerId);c.stamps=(c.stamps||0)+1;const earned=Math.floor(c.stamps/5),claimed=c.rewardsClaimed||0;if(earned>claimed){applyRS(c,RS.U);c.bonusReward=!!c.selfiePhoto;toast('🎉 Reward unlocked! '+c.stamps+' stamps');}else{toast('🥟 +1 stamp → '+c.stamps);}saveC(c);if(src!=='local')await fbS('customers:'+c.customerId,c);qrCurrent=findC(c.customerId);renderQR();}
-async function qrUnlock(){if(!qrCurrent){toast('Load a customer first','warn');return;}const c=qrCurrent;pushU('QR unlock '+c.customerId);applyRS(c,RS.U);saveC(c);if(src!=='local')await fbS('customers:'+c.customerId,c);qrCurrent=findC(c.customerId);renderQR();toast('🔓 Unlocked');}
-async function qrClaim(){if(!qrCurrent){toast('Load a customer first','warn');return;}const c=qrCurrent;pushU('QR claim '+c.customerId);c.rewardsClaimed=(c.rewardsClaimed||0)+1;applyRS(c,RS.C);c.bonusReward=false;saveC(c);if(src!=='local')await fbS('customers:'+c.customerId,c);qrCurrent=findC(c.customerId);renderQR();toast('✅ Reward claimed — stamps kept cumulative');}
-async function qrReset(){if(!qrCurrent){toast('Load a customer first','warn');return;}const c=qrCurrent;pushU('QR reset '+c.customerId);applyRS(c,RS.L);c.bonusReward=false;saveC(c);if(src!=='local')await fbS('customers:'+c.customerId,c);qrCurrent=findC(c.customerId);renderQR();toast('🔒 Reset to LOCKED','warn');}
-function openM(id){document.getElementById(id).classList.add('open');}
-function closeM(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-window.addEventListener('DOMContentLoaded',()=>{
-  initStatus();rDash();nb('nb-cust',custs().length);nb('nb-undo',0);
-  lg('ok','SG DevTools v2 ready');
-  setInterval(()=>nb('nb-cust',custs().length),3000);
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE INIT
+════════════════════════════════════════════════════════════════ */
+firebase.initializeApp({
+  apiKey:            "AIzaSyAkK4KLS93gwdalrRWPnFFSEuA5iQ2cvPk",
+  authDomain:        "shumai-gosh.firebaseapp.com",
+  databaseURL:       "https://shumai-gosh-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "shumai-gosh",
+  storageBucket:     "shumai-gosh.firebasestorage.app",
+  messagingSenderId: "62206596519",
+  appId:             "1:62206596519:web:dbfcc1d3a164ea18af5282"
+});
+const db = firebase.database();
+
+/* ═══════════════════════════════════════════════════════════════
+   CONSTANTS — must match main app
+════════════════════════════════════════════════════════════════ */
+const CACHE_CUSTOMERS = 'sg_cache_customers';
+const CACHE_ID_SEQ    = 'sg_cache_id_seq';
+const CACHE_SESSION   = 'sg_active_session';
+const CACHE_PASSPORTS = 'sg_cache_passports';
+const CACHE_ACTIVITY  = 'sg_cache_activity';
+const STORE_ACTIVITY  = 'sg_activity_log';
+
+const REWARD_STATE = { LOCKED: 'LOCKED', UNLOCKED: 'UNLOCKED', CLAIMED: 'CLAIMED' };
+
+/* ═══════════════════════════════════════════════════════════════
+   LOCAL STORAGE HELPERS
+════════════════════════════════════════════════════════════════ */
+function lsGet(k)    { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) { log('err','localStorage write failed: '+e.message); } }
+function loadCustomers() { return lsGet(CACHE_CUSTOMERS) || []; }
+function saveCustomers(c) { lsSet(CACHE_CUSTOMERS, c); }
+function loadPassports()  { return lsGet(CACHE_PASSPORTS) || {}; }
+function savePassports(p) { lsSet(CACHE_PASSPORTS, p); }
+function loadActivity()   { return lsGet(CACHE_ACTIVITY) || lsGet(STORE_ACTIVITY) || []; }
+function saveActivity(a)  { lsSet(CACHE_ACTIVITY, a); lsSet(STORE_ACTIVITY, a); }
+
+function findCustomer(id) { return loadCustomers().find(c => c.customerId === id) || null; }
+function saveCustomer(updated) {
+  const all = loadCustomers();
+  const idx = all.findIndex(c => c.customerId === updated.customerId);
+  if (idx >= 0) all[idx] = updated; else all.push(updated);
+  saveCustomers(all);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE HELPERS
+════════════════════════════════════════════════════════════════ */
+function fbPath(key) {
+  const ci = key.indexOf(':');
+  if (ci === -1) return key.replace(/[.#$[\]]/g, '_');
+  return key.slice(0, ci) + '/' + key.slice(ci + 1).replace(/[.#$[\]]/g, '_');
+}
+async function fbGet(key) {
+  try { const s = await db.ref(fbPath(key)).once('value'); return s.exists() ? s.val() : null; }
+  catch { return null; }
+}
+async function fbSet(key, val) {
+  try { await db.ref(fbPath(key)).set(val); return true; }
+  catch(e) { log('err', 'Firebase write failed: ' + e.message); return false; }
+}
+async function fbDelete(key) {
+  try { await db.ref(fbPath(key)).remove(); return true; }
+  catch(e) { log('err', 'Firebase delete failed: ' + e.message); return false; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOG
+════════════════════════════════════════════════════════════════ */
+const devLog = [];
+function log(type, msg) {
+  const ts = new Date().toLocaleTimeString();
+  devLog.unshift({ type, msg, ts });
+  if (devLog.length > 200) devLog.pop();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════════════════ */
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAV
+════════════════════════════════════════════════════════════════ */
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  refreshPanelData(id);
+}
+
+function refreshPanelData(id) {
+  if (id === 'panelCustomers') renderCustomerList();
+  if (id === 'panelStamps')    { populateSelects(); refreshStampPreview(); }
+  if (id === 'panelRewards')   { populateSelects(); refreshRewardPreview(); }
+  if (id === 'panelSelfie')    { populateSelects(); refreshSelfiePreview(); }
+  if (id === 'panelScenarios') populateSelects();
+  if (id === 'panelActivity')  { populateSelects(); refreshActivityLog(); }
+  if (id === 'panelFirebase')  loadIdSeq();
+  if (id === 'panelReset')     populateSelects();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STATUS BAR
+════════════════════════════════════════════════════════════════ */
+async function checkFirebase() {
+  try {
+    await db.ref('.info/connected').once('value');
+    const dot  = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    db.ref('.info/connected').on('value', snap => {
+      const online = snap.val();
+      dot.className  = 'status-dot' + (online ? '' : ' offline');
+      text.textContent = online ? '🔥 Connected to Firebase — shumai-gosh' : '⚠ Firebase offline';
+    });
+  } catch(e) {
+    document.getElementById('statusText').textContent = 'Firebase error: ' + e.message;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   POPULATE SELECTS
+════════════════════════════════════════════════════════════════ */
+function populateSelects() {
+  const customers = loadCustomers();
+  const ids = ['stampTarget','rewardTarget','selfieTarget','scenarioTarget','activityTarget','resetTarget'];
+  ids.forEach(sid => {
+    const sel = document.getElementById(sid);
+    if (!sel) return;
+    const isActivity = sid === 'activityTarget';
+    const prev = sel.value;
+    sel.innerHTML = isActivity ? '<option value="all">All Customers</option>' : '';
+    customers.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.customerId;
+      opt.textContent = `${c.customerId} — ${c.name} (${c.stamps || 0} stamps)`;
+      sel.appendChild(opt);
+    });
+    if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOMER LIST
+════════════════════════════════════════════════════════════════ */
+let selectedCustomerId = null;
+
+function renderCustomerList() {
+  const customers = loadCustomers();
+  const q = (document.getElementById('customerSearch')?.value || '').toLowerCase().trim();
+  const filtered = q
+    ? customers.filter(c =>
+        (c.customerId || '').toLowerCase().includes(q) ||
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.mobile || '').toLowerCase().includes(q)
+      )
+    : customers;
+  document.getElementById('customerCount').textContent = q
+    ? `(${filtered.length} of ${customers.length})`
+    : `(${customers.length})`;
+  const wrap = document.getElementById('customerList');
+  if (!filtered.length) {
+    wrap.innerHTML = q
+      ? `<p style="color:var(--soft);font-size:12px;">No customers match "<strong>${q}</strong>".</p>`
+      : '<p style="color:var(--soft);font-size:12px;">No customers in localStorage.</p>';
+    return;
+  }
+  wrap.innerHTML = filtered.map(c => {
+    const displayName = c.fullName || c.name || '—';
+    const displayMobile = c.mobileNumber || c.mobile || '—';
+    const state = getRewardState(c);
+    const avatarHtml = c.selfiePhoto
+      ? `<img src="${c.selfiePhoto}" alt="">`
+      : (c.profilePhoto ? `<img src="${c.profilePhoto}" alt="">` : '🧑');
+    return `
+      <div class="customer-row ${c.customerId === selectedCustomerId ? 'selected' : ''}"
+           onclick="selectCustomer('${c.customerId}')">
+        <div class="cr-avatar">${avatarHtml}</div>
+        <div class="cr-info">
+          <div class="cr-name">${displayName}</div>
+          <div class="cr-meta">${c.customerId} · ${displayMobile} · ${c.stamps || 0} stamps</div>
+          <div class="cr-badges" style="margin-top:5px;">
+            <span class="badge ${state === 'UNLOCKED' ? 'badge-yellow' : state === 'CLAIMED' ? 'badge-green' : 'badge-blue'}">${state}</span>
+            ${c.selfiePhoto ? '<span class="badge badge-pink">📸 selfie</span>' : ''}
+            ${c.bonusReward ? '<span class="badge badge-purple">🥤 bonus</span>' : ''}
+            <span class="badge badge-blue">×${c.rewardsClaimed || 0} claimed</span>
+          </div>
+        </div>
+        <button class="btn btn-red btn-sm" style="flex-shrink:0;"
+          onclick="event.stopPropagation();quickDeleteCustomer('${c.customerId}','${displayName}')">🗑</button>
+      </div>`;
+  }).join('');
+}
+
+function selectCustomer(id) {
+  selectedCustomerId = id;
+  renderCustomerList();
+  const c = findCustomer(id);
+  if (!c) return;
+  const card = document.getElementById('customerDetailCard');
+  card.style.display = 'block';
+  document.getElementById('detailId').textContent = id;
+  const dName   = c.fullName    || c.name   || '—';
+  const dMobile = c.mobileNumber || c.mobile || '—';
+  document.getElementById('customerDetail').innerHTML = `
+    <div class="stat-row"><span>Name</span><span class="stat-val">${dName}</span></div>
+    <div class="stat-row"><span>Mobile</span><span class="stat-val">${dMobile}</span></div>
+    <div class="stat-row"><span>Passport Number</span><span class="stat-val">${c.passportNumber || '—'}</span></div>
+    <div class="stat-row"><span>PIN</span><span class="stat-val" style="letter-spacing:0.15em;">${c.pin ? '●'.repeat(c.pin.length) : '—'}</span></div>
+    <div class="stat-row"><span>Stamps</span><span class="stat-val">${c.stamps || 0}</span></div>
+    <div class="stat-row"><span>Rewards Claimed</span><span class="stat-val">${c.rewardsClaimed || 0}</span></div>
+    <div class="stat-row"><span>Reward State</span><span class="stat-val">${getRewardState(c)}</span></div>
+    <div class="stat-row"><span>Has Selfie</span><span class="stat-val">${c.selfiePhoto ? '✅ Yes' : '❌ No'}</span></div>
+    <div class="stat-row"><span>Bonus Reward</span><span class="stat-val">${c.bonusReward ? '🥤 Yes' : '—'}</span></div>
+    <div class="stat-row"><span>Created</span><span class="stat-val">${c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</span></div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-red btn-sm" onclick="quickDeleteCustomer('${c.customerId}','${dName}')">🗑 Delete This Account</button>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REWARD STATE HELPER
+════════════════════════════════════════════════════════════════ */
+function getRewardState(c) {
+  const raw = c.rewardState || c.rewardStatus || '';
+  const u = raw.toUpperCase();
+  if (u === 'UNLOCKED') return REWARD_STATE.UNLOCKED;
+  if (u === 'CLAIMED')  return REWARD_STATE.CLAIMED;
+  return REWARD_STATE.LOCKED;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REGISTER TEST CUSTOMER
+════════════════════════════════════════════════════════════════ */
+async function registerTestCustomer() {
+  const name   = document.getElementById('regName').value.trim();
+  const mobile = document.getElementById('regMobile').value.trim();
+  const pin    = document.getElementById('regPin').value.trim();
+  const stamps = parseInt(document.getElementById('regStamps').value) || 0;
+  if (!name || !mobile || !pin) { toast('Fill in all fields', 'err'); return; }
+
+  // Generate ID via Firebase transaction
+  let customerId;
+  try {
+    const ref    = db.ref('meta/id_seq');
+    const result = await ref.transaction(cur => (cur || 0) + 1);
+    const n = result.snapshot.val();
+    customerId = 'SG-' + String(n).padStart(6, '0');
+    localStorage.setItem(CACHE_ID_SEQ, String(n));
+  } catch {
+    const n = parseInt(localStorage.getItem(CACHE_ID_SEQ) || '0') + 1;
+    customerId = 'SG-OFFLINE-' + Date.now().toString(36).toUpperCase();
+    localStorage.setItem(CACHE_ID_SEQ, String(n));
+  }
+
+  const passportNumber = 'PASS-' + customerId.replace('SG-', '');
+  const cycleCompleted = stamps > 0 && stamps % 5 === 0;
+  const customer = {
+    customerId, passportNumber, name, mobile, pin,
+    stamps,
+    rewardsClaimed: 0,
+    rewardState:  cycleCompleted ? REWARD_STATE.UNLOCKED : REWARD_STATE.LOCKED,
+    rewardStatus: cycleCompleted ? 'unlocked' : 'locked',
+    rewardReady:  cycleCompleted,
+    rewardUnlockedAt: cycleCompleted ? new Date().toISOString() : null,
+    rewardClaimedAt: null,
+    bonusReward: false,
+    createdAt: new Date().toISOString()
+  };
+
+  saveCustomer(customer);
+  await fbSet('customers:' + customerId, customer);
+  log('ok', `Registered ${customerId} — ${name}`);
+  toast(`✅ Registered ${customerId}`, 'ok');
+  refreshAll();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAMP CONTROL
+════════════════════════════════════════════════════════════════ */
+function refreshStampPreview() {
+  const id = document.getElementById('stampTarget').value;
+  if (!id) return;
+  const c = findCustomer(id);
+  if (!c) return;
+  const stamps = c.stamps || 0;
+  const grid = document.getElementById('stampPreview');
+  grid.innerHTML = Array.from({length: 5}, (_, i) =>
+    `<div class="stamp-dot ${i < (stamps % 5 === 0 && stamps > 0 ? 5 : stamps % 5) ? 'filled' : ''}">🥟</div>`
+  ).join('');
+  document.getElementById('stampPreviewText').textContent =
+    `${stamps} total stamps · ${stamps % 5} in current cycle · ${c.rewardsClaimed || 0} rewards claimed · State: ${getRewardState(c)}`;
+}
+
+async function devAwardStamps() {
+  const id    = document.getElementById('stampTarget').value;
+  const count = parseInt(document.getElementById('stampAwardCount').value) || 1;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.stamps = (c.stamps || 0) + count;
+  const cycleCompleted = c.stamps > 0 && c.stamps % 5 === 0;
+  if (cycleCompleted) {
+    c.rewardState = REWARD_STATE.UNLOCKED;
+    c.rewardStatus = 'unlocked';
+    c.rewardReady = true;
+    c.rewardUnlockedAt = new Date().toISOString();
+    c.bonusReward = !!(c.selfiePhoto);
+  }
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Awarded ${count} stamp(s) to ${id} → now ${c.stamps}`);
+  toast(`🥟 +${count} stamp(s) → ${c.stamps} total`, 'ok');
+  refreshAll(); refreshStampPreview();
+}
+
+async function devSetStamps() {
+  const id  = document.getElementById('stampTarget').value;
+  const val = parseInt(document.getElementById('stampSetVal').value);
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  if (isNaN(val) || val < 0) { toast('Enter a valid number', 'err'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.stamps = val;
+  const cycleCompleted = val > 0 && val % 5 === 0;
+  if (cycleCompleted) {
+    c.rewardState = REWARD_STATE.UNLOCKED; c.rewardStatus = 'unlocked';
+    c.rewardReady = true; c.rewardUnlockedAt = new Date().toISOString();
+    c.bonusReward = !!(c.selfiePhoto);
+  } else {
+    c.rewardState = REWARD_STATE.LOCKED; c.rewardStatus = 'locked';
+    c.rewardReady = false;
+  }
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Set ${id} stamps to ${val}`);
+  toast(`✏️ Stamps set to ${val}`, 'ok');
+  refreshAll(); refreshStampPreview();
+}
+
+async function devQuickStamps(val) {
+  const id = document.getElementById('stampTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  document.getElementById('stampSetVal').value = val;
+  await devSetStamps();
+}
+
+async function devRemoveStamps() {
+  const id    = document.getElementById('stampTarget').value;
+  const count = parseInt(document.getElementById('stampRemoveCount').value) || 1;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.stamps = Math.max(0, (c.stamps || 0) - count);
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Removed ${count} stamp(s) from ${id} → now ${c.stamps}`);
+  toast(`➖ ${count} stamp(s) removed`, 'warn');
+  refreshAll(); refreshStampPreview();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REWARD CONTROL
+════════════════════════════════════════════════════════════════ */
+function refreshRewardPreview() {
+  const id = document.getElementById('rewardTarget').value;
+  if (!id) return;
+  const c = findCustomer(id); if (!c) return;
+  const state = getRewardState(c);
+  const stateColor = state === 'UNLOCKED' ? 'var(--yellow)' : state === 'CLAIMED' ? 'var(--green)' : 'var(--soft)';
+  document.getElementById('rewardStateDisplay').innerHTML = `
+    <div class="stat-row"><span>State</span><span class="stat-val" style="color:${stateColor}">${state}</span></div>
+    <div class="stat-row"><span>rewardReady</span><span class="stat-val">${c.rewardReady ? '✅ true' : '❌ false'}</span></div>
+    <div class="stat-row"><span>rewardsClaimed</span><span class="stat-val">${c.rewardsClaimed || 0}</span></div>
+    <div class="stat-row"><span>Unlocked at</span><span class="stat-val">${c.rewardUnlockedAt ? new Date(c.rewardUnlockedAt).toLocaleString() : '—'}</span></div>
+    <div class="stat-row"><span>Claimed at</span><span class="stat-val">${c.rewardClaimedAt ? new Date(c.rewardClaimedAt).toLocaleString() : '—'}</span></div>
+  `;
+  document.getElementById('bonusRewardDisplay').innerHTML =
+    c.bonusReward
+      ? '<span style="color:var(--purple);font-weight:700;">🥤 Bonus active — customer gets Siomai + Softdrinks</span>'
+      : '<span style="color:var(--soft);">No bonus — standard Siomai reward only</span>';
+}
+
+async function devForceUnlock() {
+  const id = document.getElementById('rewardTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.rewardState = REWARD_STATE.UNLOCKED; c.rewardStatus = 'unlocked';
+  c.rewardReady = true; c.rewardUnlockedAt = new Date().toISOString();
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Force-unlocked reward for ${id}`);
+  toast('🔓 Reward unlocked', 'ok');
+  refreshAll(); refreshRewardPreview();
+}
+
+async function devForceClaim() {
+  const id = document.getElementById('rewardTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.stamps = (c.stamps || 0) % 5;
+  c.rewardsClaimed = (c.rewardsClaimed || 0) + 1;
+  c.rewardState = REWARD_STATE.CLAIMED; c.rewardStatus = 'claimed';
+  c.rewardReady = false; c.rewardClaimedAt = new Date().toISOString();
+  c.bonusReward = false;
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Force-claimed reward for ${id} (total: ${c.rewardsClaimed})`);
+  toast('✅ Reward claimed', 'ok');
+  refreshAll(); refreshRewardPreview();
+}
+
+async function devResetReward() {
+  const id = document.getElementById('rewardTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.rewardState = REWARD_STATE.LOCKED; c.rewardStatus = 'locked';
+  c.rewardReady = false; c.rewardUnlockedAt = null; c.rewardClaimedAt = null;
+  c.bonusReward = false;
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Reset reward to LOCKED for ${id}`);
+  toast('🔒 Reward reset to locked', 'warn');
+  refreshAll(); refreshRewardPreview();
+}
+
+async function devSetBonus(val) {
+  const id = document.getElementById('rewardTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.bonusReward = val;
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Set bonusReward=${val} for ${id}`);
+  toast(val ? '🥤 Bonus enabled' : '✖ Bonus disabled', val ? 'ok' : 'warn');
+  refreshAll(); refreshRewardPreview();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SELFIE
+════════════════════════════════════════════════════════════════ */
+const FAKE_SELFIE = 'data:image/svg+xml;base64,' + btoa(`
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#F2849E"/>
+  <circle cx="100" cy="80" r="45" fill="#fff" opacity="0.9"/>
+  <circle cx="100" cy="80" r="35" fill="#E05580"/>
+  <text x="100" y="90" font-size="36" text-anchor="middle" fill="#fff">🤳</text>
+  <rect x="0" y="145" width="200" height="55" fill="#E05580"/>
+  <text x="100" y="178" font-size="13" font-weight="bold" text-anchor="middle" fill="#fff" font-family="Arial">FAKE SELFIE — DEV</text>
+</svg>`);
+
+function refreshSelfiePreview() {
+  const id = document.getElementById('selfieTarget').value;
+  if (!id) return;
+  const c = findCustomer(id); if (!c) return;
+  const hasSelfie = !!(c.selfiePhoto);
+  document.getElementById('selfieStatus').innerHTML = hasSelfie
+    ? `<span style="color:var(--green);font-weight:700;">✅ Selfie on file</span>
+       <div style="margin-top:8px;"><img src="${c.selfiePhoto}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);"></div>`
+    : `<span style="color:var(--soft);">❌ No selfie — customer has not completed the selfie challenge</span>`;
+
+  const state = getRewardState(c);
+  document.getElementById('howHasSelfie').textContent  = hasSelfie ? '✅ Yes' : '❌ No';
+  document.getElementById('howBonusFlag').textContent  = c.bonusReward ? '🥤 true' : 'false';
+  document.getElementById('howStamps').textContent     = c.stamps || 0;
+  document.getElementById('howRewardState').textContent = state;
+  document.getElementById('howExpected').textContent   =
+    state === 'UNLOCKED' && c.bonusReward ? '🥟🥤 Free Siomai + Softdrinks'
+    : state === 'UNLOCKED' ? '🥟 Free Siomai only'
+    : '— No reward yet';
+}
+
+async function devAddFakeSelfie() {
+  const id = document.getElementById('selfieTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.selfiePhoto = FAKE_SELFIE;
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Added fake selfie to ${id}`);
+  toast('📸 Fake selfie added', 'ok');
+  refreshAll(); refreshSelfiePreview();
+}
+
+async function devRemoveSelfie() {
+  const id = document.getElementById('selfieTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.selfiePhoto = null; c.bonusReward = false;
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Removed selfie from ${id}`);
+  toast('🗑 Selfie removed', 'warn');
+  refreshAll(); refreshSelfiePreview();
+}
+
+async function devSimulateSelfieBonus() {
+  const id = document.getElementById('selfieTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+  c.selfiePhoto = FAKE_SELFIE;
+  c.stamps = 5;
+  c.rewardState = REWARD_STATE.UNLOCKED; c.rewardStatus = 'unlocked';
+  c.rewardReady = true; c.rewardUnlockedAt = new Date().toISOString();
+  c.bonusReward = true;
+  saveCustomer(c); await fbSet('customers:' + id, c);
+  log('ok', `Full selfie bonus scenario applied to ${id}`);
+  toast('⚡ Selfie bonus scenario ready — open main app!', 'ok');
+  refreshAll(); refreshSelfiePreview();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   QUICK SCENARIOS
+════════════════════════════════════════════════════════════════ */
+async function runScenario(type) {
+  const id = document.getElementById('scenarioTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  const c = findCustomer(id); if (!c) return;
+
+  const scenarios = {
+    fresh:         { stamps:0, rewardsClaimed:0, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, rewardUnlockedAt:null, rewardClaimedAt:null, selfiePhoto:null, bonusReward:false },
+    almost:        { stamps:4, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
+    rewardNoBonus: { stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:null, bonusReward:false },
+    rewardWithBonus:{ stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:FAKE_SELFIE, bonusReward:true },
+    veteran:       { stamps:17, rewardsClaimed:3, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, bonusReward:false },
+    selfieNoReward:{ stamps:2, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:FAKE_SELFIE, bonusReward:false },
+  };
+
+  const patch = scenarios[type];
+  Object.assign(c, patch);
+  saveCustomer(c); await fbSet('customers:' + id, c);
+
+  const desc = {
+    fresh:          `${id} reset to 0 stamps, LOCKED, no selfie.`,
+    almost:         `${id} set to 4 stamps — 1 more until reward.`,
+    rewardNoBonus:  `${id} → 5 stamps, UNLOCKED, no selfie. Standard siomai reward.`,
+    rewardWithBonus:`${id} → 5 stamps, UNLOCKED, selfie on file, bonus active. Open app to see 🥟🥤 modal.`,
+    veteran:        `${id} → 3 rewards claimed, 17 stamps total, 2 in current cycle.`,
+    selfieNoReward: `${id} → selfie on file, only 2 stamps. Bonus should NOT show yet.`,
+  };
+
+  log('ok', 'Scenario: ' + desc[type]);
+  toast('⚡ Scenario applied', 'ok');
+  document.getElementById('scenarioResult').innerHTML =
+    `<span style="color:var(--green);font-weight:700;">✅ Applied:</span> ${desc[type]}`;
+  refreshAll();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTIVITY LOG
+════════════════════════════════════════════════════════════════ */
+function refreshActivityLog() {
+  populateSelects();
+  const filterId = document.getElementById('activityTarget').value;
+  let log = loadActivity();
+  if (filterId !== 'all') log = log.filter(e => e.customerId === filterId);
+  log = log.slice().reverse().slice(0, 100);
+
+  const wrap = document.getElementById('activityList');
+  if (!log.length) { wrap.innerHTML = '<p style="color:var(--soft);font-size:12px;">No activity.</p>'; return; }
+
+  const iconMap = { stamp:'🥟', rewardUnlocked:'🎁', rewardClaimed:'✅', registration:'🆕', default:'📋' };
+  wrap.innerHTML = log.map(e => {
+    const icon = iconMap[e.eventType] || iconMap.default;
+    const ts = e.timestamp ? new Date(e.timestamp).toLocaleString() : '—';
+    return `
+      <div class="activity-item">
+        <div class="activity-icon">${icon}</div>
+        <div class="activity-text">
+          <div class="title">${e.title || e.eventType}</div>
+          <div class="desc">${e.description || ''}</div>
+          <div class="ts">${e.customerId} · ${ts}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE VIEWER
+════════════════════════════════════════════════════════════════ */
+async function fbFetch(node) {
+  document.getElementById('fbPath').textContent = node + '/';
+  document.getElementById('fbViewer').textContent = 'Loading…';
+  try {
+    const snap = await db.ref(node).once('value');
+    const val  = snap.val();
+    document.getElementById('fbViewer').textContent = JSON.stringify(val, null, 2);
+  } catch(e) {
+    document.getElementById('fbViewer').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadIdSeq() {
+  try {
+    const snap = await db.ref('meta/id_seq').once('value');
+    const val  = snap.exists() ? snap.val() : 0;
+    document.getElementById('fbIdSeq').textContent = val;
+    document.getElementById('fbNextId').textContent = 'SG-' + String(val + 1).padStart(6, '0');
+    document.getElementById('fbIdSeqInput').value = val;
+  } catch { document.getElementById('fbIdSeq').textContent = 'Error'; }
+}
+
+async function fbSetIdSeq() {
+  const val = parseInt(document.getElementById('fbIdSeqInput').value);
+  if (isNaN(val) || val < 0) { toast('Enter a valid number', 'err'); return; }
+  await db.ref('meta/id_seq').set(val);
+  localStorage.setItem(CACHE_ID_SEQ, String(val));
+  toast(`✅ id_seq set to ${val}`, 'ok');
+  loadIdSeq();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RAW JSON
+════════════════════════════════════════════════════════════════ */
+function showRaw(key) {
+  document.getElementById('rawKey').textContent = key;
+  const raw = localStorage.getItem(key);
+  try {
+    const parsed = JSON.parse(raw);
+    document.getElementById('rawViewer').textContent = JSON.stringify(parsed, null, 2);
+  } catch {
+    document.getElementById('rawViewer').textContent = raw || '(empty)';
+  }
+}
+
+function copyRaw() {
+  const text = document.getElementById('rawViewer').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('📋 Copied', 'ok'));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PULL ALL CUSTOMERS FROM FIREBASE
+════════════════════════════════════════════════════════════════ */
+async function pullAllFromFirebase() {
+  const btn = document.getElementById('pullFbBtn');
+  btn.disabled = true; btn.textContent = '⏳ Pulling…';
+  try {
+    const snap = await db.ref('customers').once('value');
+    if (!snap.exists()) { toast('No customers in Firebase', 'warn'); return; }
+    const fbData = snap.val();
+    const fbCustomers = Object.values(fbData);
+    const cached = loadCustomers();
+    let added = 0, updated = 0;
+    fbCustomers.forEach(c => {
+      const idx = cached.findIndex(x => x.customerId === c.customerId);
+      if (idx >= 0) { cached[idx] = c; updated++; }
+      else { cached.push(c); added++; }
+    });
+    saveCustomers(cached);
+    log('ok', `Firebase pull: ${added} added, ${updated} updated`);
+    toast(`✅ Pulled — ${added} new, ${updated} updated`, 'ok');
+    refreshAll();
+  } catch(e) {
+    log('err', 'Firebase pull failed: ' + e.message);
+    toast('❌ Pull failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '🔄 Pull from Firebase';
+  }
+}
+
+/* ── Quick inline delete from customer list ── */
+async function quickDeleteCustomer(id, name) {
+  if (!confirm(`Delete ${name} (${id})?\n\nThis removes them from localStorage AND Firebase.`)) return;
+  const all = loadCustomers().filter(c => c.customerId !== id);
+  saveCustomers(all);
+  const passports = loadPassports(); delete passports[id]; savePassports(passports);
+  await fbDelete('customers:' + id);
+  await fbDelete('passport:' + id);
+  await fbDelete('activity:' + id);
+  if (selectedCustomerId === id) {
+    selectedCustomerId = null;
+    document.getElementById('customerDetailCard').style.display = 'none';
+  }
+  log('warn', `Deleted ${id} — ${name}`);
+  toast(`🗑 Deleted ${id}`, 'warn');
+  refreshAll();
+}
+
+/* ── Nuclear wipe: localStorage + Firebase + id_seq reset ── */
+async function devNuclearWipe() {
+  if (!confirm('☢ FULL NUCLEAR WIPE\n\nThis will delete ALL accounts from Firebase AND localStorage, and reset the ID counter to 0.\n\nType OK to confirm — this CANNOT be undone.')) return;
+  const second = prompt('Type WIPE to confirm full deletion:');
+  if (second !== 'WIPE') { toast('Cancelled', 'warn'); return; }
+  [CACHE_CUSTOMERS, CACHE_ID_SEQ, CACHE_SESSION, CACHE_PASSPORTS, CACHE_ACTIVITY, STORE_ACTIVITY].forEach(k => localStorage.removeItem(k));
+  await db.ref('customers').remove();
+  await db.ref('meta/id_seq').set(0);
+  localStorage.setItem(CACHE_ID_SEQ, '0');
+  selectedCustomerId = null;
+  document.getElementById('customerDetailCard').style.display = 'none';
+  log('err', '☢ Nuclear wipe complete — all data deleted, id_seq reset to 0');
+  toast('☢ Nuclear wipe complete', 'err');
+  refreshAll();
+}
+
+
+async function devDeleteCustomer() {
+  const id = document.getElementById('resetTarget').value;
+  if (!id) { toast('Select a customer', 'warn'); return; }
+  if (!confirm(`Delete ${id}? This removes from localStorage and Firebase.`)) return;
+  const all = loadCustomers().filter(c => c.customerId !== id);
+  saveCustomers(all);
+  const passports = loadPassports(); delete passports[id]; savePassports(passports);
+  await fbDelete('customers:' + id);
+  await fbDelete('passport:' + id);
+  await fbDelete('activity:' + id);
+  log('warn', `Deleted customer ${id}`);
+  toast(`🗑 Deleted ${id}`, 'warn');
+  refreshAll();
+}
+
+function devClearActivity() {
+  if (!confirm('Clear all activity log entries?')) return;
+  saveActivity([]);
+  log('warn', 'Activity log cleared');
+  toast('🗑 Activity log cleared', 'warn');
+}
+
+function devWipeLocal() {
+  if (!confirm('Wipe ALL SG localStorage keys? This cannot be undone.')) return;
+  [CACHE_CUSTOMERS, CACHE_ID_SEQ, CACHE_SESSION, CACHE_PASSPORTS, CACHE_ACTIVITY, STORE_ACTIVITY].forEach(k => localStorage.removeItem(k));
+  log('warn', 'All localStorage keys wiped');
+  toast('💣 localStorage wiped', 'err');
+  refreshAll();
+}
+
+async function devWipeFirebaseCustomers() {
+  if (!confirm('Delete ALL records under customers/ in Firebase? Cannot be undone.')) return;
+  await db.ref('customers').remove();
+  log('warn', 'Firebase customers/ wiped');
+  toast('🔥 Firebase customers/ wiped', 'err');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REFRESH ALL
+════════════════════════════════════════════════════════════════ */
+function refreshAll() {
+  renderCustomerList();
+  populateSelects();
+  refreshStampPreview();
+  refreshRewardPreview();
+  refreshSelfiePreview();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  checkFirebase();
+  refreshAll();
+  // Auto-refresh every 5s in case main app makes changes
+  setInterval(refreshAll, 5000);
 });
 </script>
 </body>
