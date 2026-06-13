@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -451,7 +450,7 @@ select option { background: var(--panel2); }
         </div>
         <div class="scenario-card">
           <h4>🥟 Almost There (4 stamps)</h4>
-          <p>Set to 4 stamps. One more and they unlock the reward. No selfie.</p>
+          <p>Set to 4 stamps. Tests V2.11J nudge banner and V2.11L "Almost got your reward!" greeting. No selfie.</p>
           <button class="btn btn-ghost btn-sm" onclick="runScenario('almost')">Run Scenario</button>
         </div>
         <div class="scenario-card">
@@ -474,11 +473,16 @@ select option { background: var(--panel2); }
           <p>Has selfie, 2 stamps. Tests that bonus doesn't show prematurely.</p>
           <button class="btn btn-ghost btn-sm" onclick="runScenario('selfieNoReward')">Run Scenario</button>
         </div>
-      </div>
-
-      <div class="card" style="margin-top:16px;">
-        <div class="card-title">Scenario Result</div>
-        <div id="scenarioResult" style="font-size:12px;color:var(--soft);">Run a scenario above to see the result.</div>
+        <div class="scenario-card">
+          <h4>📸 Selfie Incentive Line (V2.11K)</h4>
+          <p>3 stamps, no selfie, LOCKED. Open app to confirm incentive copy shows in selfie section and "halfway" greeting fires.</p>
+          <button class="btn btn-pink btn-sm" onclick="runScenario('selfieIncentiveTest')">Run Scenario</button>
+        </div>
+        <div class="scenario-card">
+          <h4>🔄 New Cycle Greeting (V2.11L)</h4>
+          <p>1 stamp, 1 reward already claimed. Tests "Starting a new cycle — keep going!" greeting.</p>
+          <button class="btn btn-ghost btn-sm" onclick="runScenario('newCycle')">Run Scenario</button>
+        </div>
       </div>
     </div>
 
@@ -1124,12 +1128,15 @@ async function runScenario(type) {
   const c = findCustomer(id); if (!c) return;
 
   const scenarios = {
-    fresh:         { stamps:0, rewardsClaimed:0, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, rewardUnlockedAt:null, rewardClaimedAt:null, selfiePhoto:null, bonusReward:false },
-    almost:        { stamps:4, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
-    rewardNoBonus: { stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:null, bonusReward:false },
-    rewardWithBonus:{ stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:FAKE_SELFIE, bonusReward:true },
-    veteran:       { stamps:17, rewardsClaimed:3, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, bonusReward:false },
-    selfieNoReward:{ stamps:2, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:FAKE_SELFIE, bonusReward:false },
+    fresh:              { stamps:0, rewardsClaimed:0, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, rewardUnlockedAt:null, rewardClaimedAt:null, selfiePhoto:null, bonusReward:false },
+    almost:             { stamps:4, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
+    rewardNoBonus:      { stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:null, bonusReward:false },
+    rewardWithBonus:    { stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:FAKE_SELFIE, bonusReward:true },
+    veteran:            { stamps:17, rewardsClaimed:3, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, bonusReward:false },
+    selfieNoReward:     { stamps:2, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:FAKE_SELFIE, bonusReward:false },
+    /* V2.11K/L test scenarios */
+    selfieIncentiveTest:{ stamps:3, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
+    newCycle:           { stamps:6, rewardsClaimed:1, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
   };
 
   const patch = scenarios[type];
@@ -1137,12 +1144,14 @@ async function runScenario(type) {
   saveCustomer(c); await fbSet('customers:' + id, c);
 
   const desc = {
-    fresh:          `${id} reset to 0 stamps, LOCKED, no selfie.`,
-    almost:         `${id} set to 4 stamps — 1 more until reward.`,
-    rewardNoBonus:  `${id} → 5 stamps, UNLOCKED, no selfie. Standard siomai reward.`,
-    rewardWithBonus:`${id} → 5 stamps, UNLOCKED, selfie on file, bonus active. Open app to see 🥟🥤 modal.`,
-    veteran:        `${id} → 3 rewards claimed, 17 stamps total, 2 in current cycle.`,
-    selfieNoReward: `${id} → selfie on file, only 2 stamps. Bonus should NOT show yet.`,
+    fresh:              `${id} reset to 0 stamps, LOCKED, no selfie.`,
+    almost:             `${id} → 4 stamps, LOCKED. Open app: nudge banner + "Almost got your reward!" greeting.`,
+    rewardNoBonus:      `${id} → 5 stamps, UNLOCKED, no selfie. Standard siomai reward.`,
+    rewardWithBonus:    `${id} → 5 stamps, UNLOCKED, selfie on file, bonus active. Open app to see 🥟🥤 modal.`,
+    veteran:            `${id} → 3 rewards claimed, 17 stamps total, 2 in current cycle.`,
+    selfieNoReward:     `${id} → selfie on file, only 2 stamps. Bonus should NOT show yet.`,
+    selfieIncentiveTest:`${id} → 3 stamps, no selfie. Open app: confirm incentive line shows in selfie section + "halfway" greeting.`,
+    newCycle:           `${id} → 1 claimed reward, 1 stamp in new cycle. Open app: confirm "Starting a new cycle — keep going!" greeting.`,
   };
 
   log('ok', 'Scenario: ' + desc[type]);
