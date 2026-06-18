@@ -204,6 +204,21 @@ select option { background: var(--panel2); }
 .loc-btn-street:hover { background: rgba(155,89,182,0.26); }
 .loc-refresh-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .loc-last-refresh { font-size: 11px; color: var(--soft); }
+/* V-L2: stale card (no ping in >90s means something is wrong) */
+.loc-card--stale { border-color: rgba(231,76,60,0.5) !important; }
+.loc-card--stale .loc-card__id::after { content: ' ⚠ STALE'; font-size: 9px; font-weight: 800; color: var(--red); letter-spacing: 0.08em; vertical-align: middle; margin-left: 5px; }
+/* V-L2: ping history section */
+.ping-section { margin-top: 20px; }
+.ping-section-title { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--soft); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+.ping-staff-select { background: var(--panel2); border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; color: var(--text); font-family: var(--font); font-size: 12px; outline: none; min-width: 160px; }
+.ping-list { background: #0a0c12; border-radius: 8px; padding: 10px 12px; max-height: 280px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 10.5px; line-height: 1.75; }
+.ping-row { display: flex; gap: 8px; align-items: baseline; border-bottom: 1px solid rgba(255,255,255,0.04); padding: 2px 0; }
+.ping-row:last-child { border-bottom: none; }
+.ping-ok   { color: var(--green); flex-shrink: 0; }
+.ping-fail { color: var(--red);   flex-shrink: 0; }
+.ping-time { color: #555; flex-shrink: 0; }
+.ping-coords { color: #a5d6ff; }
+.ping-reason { color: var(--yellow); }
 </style>
 </head>
 <body>
@@ -547,6 +562,8 @@ select option { background: var(--panel2); }
         <button class="btn btn-ghost" onclick="fbFetch('meta')">📂 Load meta/</button>
         <button class="btn btn-ghost" onclick="fbFetch('passport')">📂 Load passport/</button>
         <button class="btn btn-ghost" onclick="fbFetch('activity')">📂 Load activity/</button>
+        <button class="btn btn-ghost" onclick="fbFetch('staff_location')">📍 Load staff_location/</button>
+        <button class="btn btn-ghost" onclick="fbFetch('locationPings')">🏓 Load locationPings/</button>
       </div>
 
       <div class="card">
@@ -612,6 +629,22 @@ select option { background: var(--panel2); }
         <div class="loc-empty">
           <span class="loc-empty-icon">📡</span>
           Loading staff locations…
+        </div>
+      </div>
+
+      <!-- V-L2: Ping History -->
+      <div class="ping-section">
+        <div class="ping-section-title">
+          <span>🏓 Ping History (locationPings/)</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select class="ping-staff-select" id="pingStaffSelect" onchange="loadPingHistory()">
+              <option value="">— Select staff —</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="loadPingHistory()">↻</button>
+          </div>
+        </div>
+        <div class="ping-list" id="pingList" style="color:var(--soft);font-family:var(--font);font-size:12px;text-align:center;padding:20px;">
+          Select a staff member above to load their ping history.
         </div>
       </div>
     </div>
@@ -1435,15 +1468,32 @@ function _locRenderCards(data) {
     return;
   }
 
+  /* V-L2: populate ping history staff selector */
+  const pingSel = document.getElementById('pingStaffSelect');
+  if (pingSel) {
+    const prev = pingSel.value;
+    pingSel.innerHTML = '<option value="">— Select staff —</option>';
+    Object.values(data).forEach(s => {
+      if (!s.staffId) return;
+      const opt = document.createElement('option');
+      opt.value = s.staffId;
+      opt.textContent = s.staffId + ' (' + (s.role || 'unknown') + ')';
+      pingSel.appendChild(opt);
+    });
+    if (prev && [...pingSel.options].some(o => o.value === prev)) pingSel.value = prev;
+  }
+
   grid.innerHTML = Object.values(data).map(s => {
     const accClass = _locAccuracyClass(s.accuracy || 999);
     const accIcon  = accClass === 'good' ? '🎯' : accClass === 'fair' ? '📶' : '⚠️';
     const age      = _locFmtAge(s.timestamp);
+    /* V-L2: flag as stale if last ping was >90s ago (interval is now 30s) */
+    const isStale  = s.timestamp && (Date.now() - s.timestamp) > 90000;
     const mapsUrl  = `https://www.google.com/maps?q=${s.lat},${s.lng}`;
     const streetUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${s.lat},${s.lng}`;
 
     return `
-    <div class="loc-card">
+    <div class="loc-card${isStale ? ' loc-card--stale' : ''}">
       <div class="loc-card__top">
         <div class="loc-card__avatar">${_locRoleAvatar(s.role)}</div>
         <div class="loc-card__info">
@@ -1483,6 +1533,45 @@ function loadStaffLocations() {
         Failed to read staff_location/: ${err.message}
       </div>`;
   });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PING HISTORY VIEWER  (V-L2)
+   Reads locationPings/{staffId}/ and renders a log of every
+   30s ping — success or failure — for the selected staff member.
+════════════════════════════════════════════════════════════════ */
+async function loadPingHistory() {
+  const sel    = document.getElementById('pingStaffSelect');
+  const list   = document.getElementById('pingList');
+  const staffId = sel ? sel.value : '';
+  if (!staffId) {
+    list.innerHTML = '<span style="color:var(--soft);">Select a staff member above to load their ping history.</span>';
+    return;
+  }
+  list.innerHTML = '<span style="color:var(--soft);">Loading…</span>';
+  try {
+    const snap = await db.ref('locationPings/' + staffId).orderByChild('timestamp').limitToLast(60).once('value');
+    const val  = snap.val();
+    if (!val) {
+      list.innerHTML = '<span style="color:var(--soft);">No pings found for ' + staffId + '.</span>';
+      return;
+    }
+    /* Sort newest-first */
+    const pings = Object.values(val).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    list.innerHTML = pings.map(p => {
+      const t      = p.at ? new Date(p.at).toLocaleTimeString() : '—';
+      const icon   = p.ok ? '<span class="ping-ok">✔</span>' : '<span class="ping-fail">✘</span>';
+      const coords = p.ok && p.lat != null
+        ? `<span class="ping-coords">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)} ±${p.accuracy || '?'}m</span>`
+        : '';
+      const reason = !p.ok && p.reason
+        ? `<span class="ping-reason">${p.reason}</span>`
+        : '';
+      return `<div class="ping-row">${icon}<span class="ping-time">${t}</span>${coords}${reason}</div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<span style="color:var(--red);">Error: ' + e.message + '</span>';
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
