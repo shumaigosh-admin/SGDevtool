@@ -171,6 +171,39 @@ select option { background: var(--panel2); }
 .toast.ok   { border-left: 4px solid var(--green); }
 .toast.err  { border-left: 4px solid var(--red); }
 .toast.warn { border-left: 4px solid var(--yellow); }
+
+/* ── Staff Location Panel (V-L1) ── */
+.loc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.loc-live-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.3); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 700; color: var(--green); }
+.loc-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: loc-pulse 1.4s ease infinite; }
+@keyframes loc-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+.loc-empty { text-align: center; padding: 40px 20px; color: var(--soft); font-size: 13px; }
+.loc-empty .loc-empty-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+.loc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.loc-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+.loc-card:hover { border-color: var(--accent); }
+.loc-card__top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.loc-card__avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(242,132,158,0.12); border: 1px solid rgba(242,132,158,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.loc-card__info { flex: 1; min-width: 0; }
+.loc-card__id { font-size: 13px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.loc-card__role { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+.loc-card__role--admin   { color: var(--accent); }
+.loc-card__role--manager { color: var(--yellow); }
+.loc-card__role--cashier { color: var(--green); }
+.loc-card__coords { background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px 12px; font-size: 11px; font-family: monospace; color: var(--text); line-height: 1.8; margin-bottom: 10px; }
+.loc-card__coords span { color: var(--soft); }
+.loc-card__meta { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--soft); margin-bottom: 10px; }
+.loc-card__accuracy { display: inline-flex; align-items: center; gap: 4px; }
+.loc-card__accuracy--good { color: var(--green); }
+.loc-card__accuracy--fair { color: var(--yellow); }
+.loc-card__accuracy--poor { color: var(--red); }
+.loc-card__actions { display: flex; gap: 8px; }
+.loc-btn-map { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 12px; background: rgba(52,152,219,0.15); border: 1px solid rgba(52,152,219,0.3); border-radius: 7px; color: var(--blue); font-size: 11px; font-weight: 700; text-decoration: none; transition: all 0.15s; cursor: pointer; }
+.loc-btn-map:hover { background: rgba(52,152,219,0.28); }
+.loc-btn-street { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 12px; background: rgba(155,89,182,0.12); border: 1px solid rgba(155,89,182,0.28); border-radius: 7px; color: var(--purple); font-size: 11px; font-weight: 700; text-decoration: none; transition: all 0.15s; cursor: pointer; }
+.loc-btn-street:hover { background: rgba(155,89,182,0.26); }
+.loc-refresh-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.loc-last-refresh { font-size: 11px; color: var(--soft); }
 </style>
 </head>
 <body>
@@ -204,6 +237,9 @@ select option { background: var(--panel2); }
     </button>
 
     <div class="nav-section">Data</div>
+    <button class="nav-btn" onclick="showPanel('panelLocation')" id="nav-panelLocation">
+      <span class="icon">📍</span> Staff Location
+    </button>
     <button class="nav-btn" onclick="showPanel('panelActivity')" id="nav-panelActivity">
       <span class="icon">📋</span> Activity Log
     </button>
@@ -450,7 +486,7 @@ select option { background: var(--panel2); }
         </div>
         <div class="scenario-card">
           <h4>🥟 Almost There (4 stamps)</h4>
-          <p>Set to 4 stamps. Tests V2.11J nudge banner and V2.11L "Almost got your reward!" greeting. No selfie.</p>
+          <p>Set to 4 stamps. One more and they unlock the reward. No selfie.</p>
           <button class="btn btn-ghost btn-sm" onclick="runScenario('almost')">Run Scenario</button>
         </div>
         <div class="scenario-card">
@@ -473,16 +509,11 @@ select option { background: var(--panel2); }
           <p>Has selfie, 2 stamps. Tests that bonus doesn't show prematurely.</p>
           <button class="btn btn-ghost btn-sm" onclick="runScenario('selfieNoReward')">Run Scenario</button>
         </div>
-        <div class="scenario-card">
-          <h4>📸 Selfie Incentive Line (V2.11K)</h4>
-          <p>3 stamps, no selfie, LOCKED. Open app to confirm incentive copy shows in selfie section and "halfway" greeting fires.</p>
-          <button class="btn btn-pink btn-sm" onclick="runScenario('selfieIncentiveTest')">Run Scenario</button>
-        </div>
-        <div class="scenario-card">
-          <h4>🔄 New Cycle Greeting (V2.11L)</h4>
-          <p>1 stamp, 1 reward already claimed. Tests "Starting a new cycle — keep going!" greeting.</p>
-          <button class="btn btn-ghost btn-sm" onclick="runScenario('newCycle')">Run Scenario</button>
-        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">Scenario Result</div>
+        <div id="scenarioResult" style="font-size:12px;color:var(--soft);">Run a scenario above to see the result.</div>
       </div>
     </div>
 
@@ -560,6 +591,31 @@ select option { background: var(--panel2); }
     </div>
 
     <!-- ── RESET / WIPE ── -->
+    <!-- ═══════════════════════════════════════════════════
+         PANEL — STAFF LOCATION  (V-L1)
+    ════════════════════════════════════════════════════ -->
+    <div class="panel" id="panelLocation">
+      <div class="loc-header">
+        <div>
+          <div class="panel-title">📍 Staff Location</div>
+          <div class="panel-sub">Live GPS positions of all active staff members.</div>
+        </div>
+        <span class="loc-live-badge"><span class="loc-live-dot"></span> LIVE</span>
+      </div>
+
+      <div class="loc-refresh-row">
+        <button class="btn btn-ghost btn-sm" onclick="loadStaffLocations()">↻ Refresh</button>
+        <span class="loc-last-refresh" id="locLastRefresh">—</span>
+      </div>
+
+      <div id="locGrid" class="loc-grid">
+        <div class="loc-empty">
+          <span class="loc-empty-icon">📡</span>
+          Loading staff locations…
+        </div>
+      </div>
+    </div>
+
     <div class="panel" id="panelReset">
       <div class="panel-title">Reset / Wipe</div>
       <div class="panel-sub">Destructive operations. Irreversible.</div>
@@ -718,6 +774,7 @@ function refreshPanelData(id) {
   if (id === 'panelScenarios') populateSelects();
   if (id === 'panelActivity')  { populateSelects(); refreshActivityLog(); }
   if (id === 'panelFirebase')  loadIdSeq();
+  if (id === 'panelLocation')  loadStaffLocations(); /* V-L1 */
   if (id === 'panelReset')     populateSelects();
 }
 
@@ -1128,15 +1185,12 @@ async function runScenario(type) {
   const c = findCustomer(id); if (!c) return;
 
   const scenarios = {
-    fresh:              { stamps:0, rewardsClaimed:0, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, rewardUnlockedAt:null, rewardClaimedAt:null, selfiePhoto:null, bonusReward:false },
-    almost:             { stamps:4, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
-    rewardNoBonus:      { stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:null, bonusReward:false },
-    rewardWithBonus:    { stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:FAKE_SELFIE, bonusReward:true },
-    veteran:            { stamps:17, rewardsClaimed:3, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, bonusReward:false },
-    selfieNoReward:     { stamps:2, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:FAKE_SELFIE, bonusReward:false },
-    /* V2.11K/L test scenarios */
-    selfieIncentiveTest:{ stamps:3, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
-    newCycle:           { stamps:6, rewardsClaimed:1, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
+    fresh:         { stamps:0, rewardsClaimed:0, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, rewardUnlockedAt:null, rewardClaimedAt:null, selfiePhoto:null, bonusReward:false },
+    almost:        { stamps:4, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:null, bonusReward:false },
+    rewardNoBonus: { stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:null, bonusReward:false },
+    rewardWithBonus:{ stamps:5, rewardState:'UNLOCKED', rewardStatus:'unlocked', rewardReady:true, rewardUnlockedAt:new Date().toISOString(), selfiePhoto:FAKE_SELFIE, bonusReward:true },
+    veteran:       { stamps:17, rewardsClaimed:3, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, bonusReward:false },
+    selfieNoReward:{ stamps:2, rewardState:'LOCKED', rewardStatus:'locked', rewardReady:false, selfiePhoto:FAKE_SELFIE, bonusReward:false },
   };
 
   const patch = scenarios[type];
@@ -1144,14 +1198,12 @@ async function runScenario(type) {
   saveCustomer(c); await fbSet('customers:' + id, c);
 
   const desc = {
-    fresh:              `${id} reset to 0 stamps, LOCKED, no selfie.`,
-    almost:             `${id} → 4 stamps, LOCKED. Open app: nudge banner + "Almost got your reward!" greeting.`,
-    rewardNoBonus:      `${id} → 5 stamps, UNLOCKED, no selfie. Standard siomai reward.`,
-    rewardWithBonus:    `${id} → 5 stamps, UNLOCKED, selfie on file, bonus active. Open app to see 🥟🥤 modal.`,
-    veteran:            `${id} → 3 rewards claimed, 17 stamps total, 2 in current cycle.`,
-    selfieNoReward:     `${id} → selfie on file, only 2 stamps. Bonus should NOT show yet.`,
-    selfieIncentiveTest:`${id} → 3 stamps, no selfie. Open app: confirm incentive line shows in selfie section + "halfway" greeting.`,
-    newCycle:           `${id} → 1 claimed reward, 1 stamp in new cycle. Open app: confirm "Starting a new cycle — keep going!" greeting.`,
+    fresh:          `${id} reset to 0 stamps, LOCKED, no selfie.`,
+    almost:         `${id} set to 4 stamps — 1 more until reward.`,
+    rewardNoBonus:  `${id} → 5 stamps, UNLOCKED, no selfie. Standard siomai reward.`,
+    rewardWithBonus:`${id} → 5 stamps, UNLOCKED, selfie on file, bonus active. Open app to see 🥟🥤 modal.`,
+    veteran:        `${id} → 3 rewards claimed, 17 stamps total, 2 in current cycle.`,
+    selfieNoReward: `${id} → selfie on file, only 2 stamps. Bonus should NOT show yet.`,
   };
 
   log('ok', 'Scenario: ' + desc[type]);
@@ -1343,6 +1395,94 @@ async function devWipeFirebaseCustomers() {
   await db.ref('customers').remove();
   log('warn', 'Firebase customers/ wiped');
   toast('🔥 Firebase customers/ wiped', 'err');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAFF LOCATION VIEWER  (V-L1)
+   Reads staff_location/ from Firebase and renders live cards.
+════════════════════════════════════════════════════════════════ */
+let _locListener = null; /* Firebase onValue handle */
+
+function _locFmtAge(ts) {
+  if (!ts) return 'Unknown';
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60)  return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  return Math.floor(diff / 3600) + 'h ago';
+}
+
+function _locAccuracyClass(acc) {
+  if (acc <= 30)  return 'good';
+  if (acc <= 100) return 'fair';
+  return 'poor';
+}
+
+function _locRoleAvatar(role) {
+  return { admin: '🛡️', manager: '👔', cashier: '🥟' }[role] || '🧑‍💼';
+}
+
+function _locRenderCards(data) {
+  const grid = document.getElementById('locGrid');
+  const ts   = document.getElementById('locLastRefresh');
+  ts.textContent = 'Last refreshed: ' + new Date().toLocaleTimeString();
+
+  if (!data || Object.keys(data).length === 0) {
+    grid.innerHTML = `
+      <div class="loc-empty">
+        <span class="loc-empty-icon">🔇</span>
+        No staff currently online with location enabled.
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = Object.values(data).map(s => {
+    const accClass = _locAccuracyClass(s.accuracy || 999);
+    const accIcon  = accClass === 'good' ? '🎯' : accClass === 'fair' ? '📶' : '⚠️';
+    const age      = _locFmtAge(s.timestamp);
+    const mapsUrl  = `https://www.google.com/maps?q=${s.lat},${s.lng}`;
+    const streetUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${s.lat},${s.lng}`;
+
+    return `
+    <div class="loc-card">
+      <div class="loc-card__top">
+        <div class="loc-card__avatar">${_locRoleAvatar(s.role)}</div>
+        <div class="loc-card__info">
+          <div class="loc-card__id">${s.staffId || '—'}</div>
+          <div class="loc-card__role loc-card__role--${s.role || 'cashier'}">${(s.role || 'unknown').toUpperCase()}</div>
+        </div>
+      </div>
+      <div class="loc-card__coords">
+        <span>LAT</span>  ${(s.lat || 0).toFixed(6)}<br>
+        <span>LNG</span>  ${(s.lng || 0).toFixed(6)}
+      </div>
+      <div class="loc-card__meta">
+        <span class="loc-card__accuracy loc-card__accuracy--${accClass}">${accIcon} ±${s.accuracy || '?'}m accuracy</span>
+        <span>⏱ ${age}</span>
+      </div>
+      <div class="loc-card__actions">
+        <a class="loc-btn-map" href="${mapsUrl}" target="_blank" rel="noopener">🗺 Maps</a>
+        <a class="loc-btn-street" href="${streetUrl}" target="_blank" rel="noopener">🏠 Street View</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadStaffLocations() {
+  /* Detach any previous listener to avoid duplicates */
+  if (_locListener) {
+    db.ref('staff_location').off('value', _locListener);
+  }
+
+  /* Live listener — updates automatically whenever Firebase changes */
+  _locListener = db.ref('staff_location').on('value', snap => {
+    _locRenderCards(snap.val());
+  }, err => {
+    document.getElementById('locGrid').innerHTML = `
+      <div class="loc-empty">
+        <span class="loc-empty-icon">❌</span>
+        Failed to read staff_location/: ${err.message}
+      </div>`;
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════
