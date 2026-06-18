@@ -1401,7 +1401,7 @@ async function devWipeFirebaseCustomers() {
    STAFF LOCATION VIEWER  (V-L1)
    Reads staff_location/ from Firebase and renders live cards.
 ════════════════════════════════════════════════════════════════ */
-let _locListener = null; /* Firebase onValue handle */
+var _locListener = null; /* Firebase onValue handle — var avoids TDZ (V-L1 fix) */
 
 function _locFmtAge(ts) {
   if (!ts) return 'Unknown';
