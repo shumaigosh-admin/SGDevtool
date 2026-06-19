@@ -671,7 +671,7 @@ select option { background: var(--panel2); }
         <div class="form-row">
           <label>Rank By</label>
           <select id="saRankBy" onchange="renderSalesAnalytics()">
-            <option value="customers" selected>Customers Served (sales count)</option>
+            <option value="customers" selected>Sales Count</option>
             <option value="revenue">Revenue</option>
             <option value="avg">Average Sale Size</option>
           </select>
@@ -1679,7 +1679,7 @@ function renderSalesAnalytics() {
     const lastSale = Math.max(...s.sales.map(r => r.timestamp || 0));
     return {
       ...s,
-      customers: s.sales.length,   // each cash sale ≈ one customer served
+      customers: s.sales.length,   // total cash sales logged at this spot
       avg: s.revenue / s.sales.length,
       peakHour,
       lastSale
@@ -1696,7 +1696,7 @@ function renderSalesAnalytics() {
   wrap.innerHTML = `
     <table class="sa-table">
       <thead><tr>
-        <th>Rank</th><th>Location</th><th>Customers Served</th><th>Revenue</th>
+        <th>Rank</th><th>Location</th><th>Sales Count</th><th>Revenue</th>
         <th>Avg Sale</th><th>Best Hour</th><th>Activity (by hour)</th><th>Last Sale</th>
       </tr></thead>
       <tbody>
@@ -1734,8 +1734,8 @@ function generateSalesRoute() {
     <div class="sa-route-item">
       <div class="sa-route-num">${i + 1}</div>
       <div class="sa-route-body">
-        <div class="sa-route-title">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)} — ${s.customers} customer${s.customers === 1 ? '' : 's'}, ${_saPeso(s.revenue)}</div>
-        <div class="sa-route-sub">Best time to be here: ${s.peakHour}:00–${s.peakHour + 1}:00 · ${pct}% of top spot's traffic</div>
+        <div class="sa-route-title">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)} — ${s.customers} sale${s.customers === 1 ? '' : 's'}, ${_saPeso(s.revenue)}</div>
+        <div class="sa-route-sub">Best time to be here: ${s.peakHour}:00–${s.peakHour + 1}:00 · ${pct}% of top spot's volume</div>
       </div>
     </div>`;
   }).join('');
