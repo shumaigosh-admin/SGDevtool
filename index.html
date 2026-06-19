@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -204,6 +205,34 @@ select option { background: var(--panel2); }
 .loc-btn-street:hover { background: rgba(155,89,182,0.26); }
 .loc-refresh-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .loc-last-refresh { font-size: 11px; color: var(--soft); }
+
+/* ── Sales Analytics Panel ── */
+.sa-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.sa-stat { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.sa-stat .sa-stat-label { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); margin-bottom: 6px; }
+.sa-stat .sa-stat-val   { font-size: 20px; font-weight: 800; color: var(--accent); }
+.sa-controls { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 16px; flex-wrap: wrap; }
+.sa-controls .form-row { margin-bottom: 0; min-width: 160px; }
+.sa-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.sa-table th { text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.sa-table td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.sa-table tr:last-child td { border-bottom: none; }
+.sa-table tr:hover td { background: rgba(255,255,255,0.02); }
+.sa-rank { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--panel2); font-weight: 800; font-size: 11px; }
+.sa-rank.sa-rank-1 { background: linear-gradient(135deg,#ffd86b,#f1c40f); color:#3a2c00; }
+.sa-rank.sa-rank-2 { background: linear-gradient(135deg,#dfe6ec,#b9c2cc); color:#2a2a2a; }
+.sa-rank.sa-rank-3 { background: linear-gradient(135deg,#e3a06b,#c97a3f); color:#2a1300; }
+.sa-hours { display: flex; gap: 2px; align-items: flex-end; height: 26px; }
+.sa-hour-bar { width: 4px; background: var(--accent); border-radius: 1px; opacity: 0.85; min-height: 2px; }
+.sa-loc-link { color: var(--blue); text-decoration: none; font-weight: 700; }
+.sa-loc-link:hover { text-decoration: underline; }
+.sa-empty { text-align: center; padding: 40px 20px; color: var(--soft); font-size: 13px; }
+.sa-route-list { display: flex; flex-direction: column; gap: 8px; }
+.sa-route-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--panel2); border-radius: 8px; }
+.sa-route-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent2); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
+.sa-route-body { flex: 1; min-width: 0; }
+.sa-route-title { font-weight: 700; font-size: 12px; }
+.sa-route-sub { font-size: 11px; color: var(--soft); margin-top: 1px; }
 </style>
 </head>
 <body>
@@ -239,6 +268,9 @@ select option { background: var(--panel2); }
     <div class="nav-section">Data</div>
     <button class="nav-btn" onclick="showPanel('panelLocation')" id="nav-panelLocation">
       <span class="icon">📍</span> Staff Location
+    </button>
+    <button class="nav-btn" onclick="showPanel('panelSalesAnalytics')" id="nav-panelSalesAnalytics">
+      <span class="icon">📊</span> Sales Analytics
     </button>
     <button class="nav-btn" onclick="showPanel('panelActivity')" id="nav-panelActivity">
       <span class="icon">📋</span> Activity Log
@@ -547,11 +579,6 @@ select option { background: var(--panel2); }
         <button class="btn btn-ghost" onclick="fbFetch('meta')">📂 Load meta/</button>
         <button class="btn btn-ghost" onclick="fbFetch('passport')">📂 Load passport/</button>
         <button class="btn btn-ghost" onclick="fbFetch('activity')">📂 Load activity/</button>
-        <button class="btn btn-yellow" onclick="fbFetch('auditLogs')">📂 Load auditLogs/</button>
-        <button class="btn btn-ghost" onclick="fbFetch('stamps_log')">📂 Load stamps_log/</button>
-        <button class="btn btn-ghost" onclick="fbFetch('rewardClaims')">📂 Load rewardClaims/</button>
-        <button class="btn btn-ghost" onclick="fbFetch('rewardStateCorrections')">📂 Load rewardStateCorrections/</button>
-        <button class="btn btn-ghost" onclick="fbFetch('locationPings')">📂 Load locationPings/</button>
       </div>
 
       <div class="card">
@@ -619,26 +646,70 @@ select option { background: var(--panel2); }
           Loading staff locations…
         </div>
       </div>
+    </div>
 
-      <!-- ── Location Ping History ── -->
-      <div style="margin-top: 28px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px;">
-          <div>
-            <div class="panel-title" style="font-size:15px; margin-bottom:2px;">📜 Ping History</div>
-            <div class="panel-sub" style="margin-bottom:0;">Per-staff movement log from locationPings/ — last 50 entries per member.</div>
-          </div>
+    <!-- ── SALES ANALYTICS ── -->
+    <div class="panel" id="panelSalesAnalytics">
+      <div class="loc-header">
+        <div>
+          <div class="panel-title">📊 Sales Analytics</div>
+          <div class="panel-sub">Reads <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">sales/</code> from Firebase — groups every GPS-tagged sale into selling spots, ranks them by customers served and revenue, and suggests a route.</div>
         </div>
-        <div style="display:flex; gap:8px; align-items:flex-end; margin-bottom:14px;">
-          <div style="flex:1;">
-            <label>Filter by Staff ID (leave blank for all)</label>
-            <input id="pingHistoryTarget" type="text" placeholder="e.g. A1B2C3D4 or leave blank">
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="loadPingHistory()">🔍 Load Ping History</button>
+        <span class="loc-live-badge"><span class="loc-live-dot"></span> LIVE</span>
+      </div>
+
+      <div class="sa-controls">
+        <div class="form-row">
+          <label>Date Range</label>
+          <select id="saRange" onchange="loadSalesAnalytics()">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="0">All time</option>
+          </select>
         </div>
-        <div id="pingHistoryWrap" class="card" style="display:none;">
-          <div class="card-title">Ping Events — <span id="pingHistoryLabel" style="color:var(--accent);">—</span></div>
-          <div id="pingHistoryList" style="max-height:380px; overflow-y:auto;"></div>
+        <div class="form-row">
+          <label>Rank By</label>
+          <select id="saRankBy" onchange="renderSalesAnalytics()">
+            <option value="customers" selected>Customers Served (sales count)</option>
+            <option value="revenue">Revenue</option>
+            <option value="avg">Average Sale Size</option>
+          </select>
         </div>
+        <div class="form-row">
+          <label>Group Radius</label>
+          <select id="saGridSize" onchange="loadSalesAnalytics()">
+            <option value="3">~100m (tight)</option>
+            <option value="2" selected>~1km (street/area)</option>
+            <option value="1">~10km (district)</option>
+          </select>
+        </div>
+        <button class="btn btn-blue btn-sm" onclick="loadSalesAnalytics()">↻ Refresh</button>
+        <span class="loc-last-refresh" id="saLastRefresh" style="margin-left:auto;">—</span>
+      </div>
+
+      <div class="sa-summary" id="saSummary">
+        <div class="sa-stat"><div class="sa-stat-label">Total Sales</div><div class="sa-stat-val" id="saTotalSales">—</div></div>
+        <div class="sa-stat"><div class="sa-stat-label">Total Revenue</div><div class="sa-stat-val" id="saTotalRevenue">—</div></div>
+        <div class="sa-stat"><div class="sa-stat-label">Selling Spots</div><div class="sa-stat-val" id="saTotalSpots">—</div></div>
+        <div class="sa-stat"><div class="sa-stat-label">Untagged Sales</div><div class="sa-stat-val" id="saUntagged">—</div></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">📍 Location Ranking</div>
+          <button class="btn btn-purple btn-sm" onclick="generateSalesRoute()">🗺 Suggest Route</button>
+        </div>
+        <div id="saTableWrap">
+          <div class="sa-empty"><span style="font-size:30px;display:block;margin-bottom:8px;">📡</span>Loading sales…</div>
+        </div>
+      </div>
+
+      <div class="card" id="saRouteCard" style="display:none;">
+        <div class="card-title">🗺 Suggested Route (highest-value spots first)</div>
+        <p style="font-size:11px;color:var(--soft);margin-bottom:12px;line-height:1.5;">Ranked by where your vendor serves the most customers / earns the most, with each spot's best-performing hour so you know when to be there.</p>
+        <div class="sa-route-list" id="saRouteList"></div>
+        <button class="btn btn-blue btn-sm" style="margin-top:12px;" id="saRouteMapsBtn" onclick="openSalesRouteInMaps()">🗺 Open Full Route in Google Maps</button>
       </div>
     </div>
 
@@ -677,21 +748,6 @@ select option { background: var(--panel2); }
         <div class="card-title" style="color:var(--red)">⚠ Wipe Firebase customers/</div>
         <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Deletes all records under <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">customers/</code> in Firebase Realtime Database. meta/id_seq is NOT reset.</p>
         <button class="btn btn-red" onclick="devWipeFirebaseCustomers()">🔥 Wipe Firebase customers/</button>
-      </div>
-
-      <div class="card danger-zone">
-        <div class="card-title" style="color:var(--red)">⚠ Wipe Firebase auditLogs/</div>
-        <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Deletes ALL entries under <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">auditLogs/</code> in Firebase. Useful for clearing test noise before a real deployment. Irreversible.</p>
-        <button class="btn btn-red" onclick="devWipeAuditLogs()">🗑 Wipe auditLogs/</button>
-      </div>
-
-      <div class="card danger-zone">
-        <div class="card-title" style="color:var(--red)">⚠ Wipe Firebase stamps_log/ + rewardClaims/</div>
-        <p style="font-size:12px;color:var(--soft);margin-bottom:14px;line-height:1.5;">Deletes all per-customer stamp transaction logs and reward claim records. Does not affect customer records or stamp counts.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-red btn-sm" onclick="devWipeStampsLog()">🗑 Wipe stamps_log/</button>
-          <button class="btn btn-red btn-sm" onclick="devWipeRewardClaims()">🗑 Wipe rewardClaims/</button>
-        </div>
       </div>
 
       <div class="card danger-zone" style="border-color:rgba(231,76,60,0.6);background:rgba(231,76,60,0.08);">
@@ -804,6 +860,7 @@ function showPanel(id) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.getElementById('nav-' + id).classList.add('active');
+  if (id !== 'panelSalesAnalytics') stopSalesAnalytics();
   refreshPanelData(id);
 }
 
@@ -816,6 +873,7 @@ function refreshPanelData(id) {
   if (id === 'panelActivity')  { populateSelects(); refreshActivityLog(); }
   if (id === 'panelFirebase')  loadIdSeq();
   if (id === 'panelLocation')  loadStaffLocations(); /* V-L1 */
+  if (id === 'panelSalesAnalytics') loadSalesAnalytics();
   if (id === 'panelReset')     populateSelects();
 }
 
@@ -852,7 +910,7 @@ function populateSelects() {
     customers.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.customerId;
-      opt.textContent = `${c.customerId} — ${c.fullName || c.name || '—'} (${c.stamps || 0} stamps)`;
+      opt.textContent = `${c.customerId} — ${c.name} (${c.stamps || 0} stamps)`;
       sel.appendChild(opt);
     });
     if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
@@ -870,8 +928,8 @@ function renderCustomerList() {
   const filtered = q
     ? customers.filter(c =>
         (c.customerId || '').toLowerCase().includes(q) ||
-        (c.fullName || c.name || '').toLowerCase().includes(q) ||
-        (c.mobileNumber || c.mobile || '').toLowerCase().includes(q)
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.mobile || '').toLowerCase().includes(q)
       )
     : customers;
   document.getElementById('customerCount').textContent = q
@@ -976,12 +1034,8 @@ async function registerTestCustomer() {
   const passportNumber = 'PASS-' + customerId.replace('SG-', '');
   const cycleCompleted = stamps > 0 && stamps % 5 === 0;
   const customer = {
-    customerId, passportNumber,
-    /* V2.09C alignment: main apps read fullName + mobileNumber */
-    fullName: name, mobileNumber: mobile,
-    /* keep legacy aliases so older cached records still display */
-    name, mobile,
-    pin, stamps,
+    customerId, passportNumber, name, mobile, pin,
+    stamps,
     rewardsClaimed: 0,
     rewardState:  cycleCompleted ? REWARD_STATE.UNLOCKED : REWARD_STATE.LOCKED,
     rewardStatus: cycleCompleted ? 'unlocked' : 'locked',
@@ -1115,9 +1169,7 @@ async function devForceClaim() {
   const id = document.getElementById('rewardTarget').value;
   if (!id) { toast('Select a customer', 'warn'); return; }
   const c = findCustomer(id); if (!c) return;
-  /* V2.09C fix: stamps stay CUMULATIVE — do NOT reset with % 5.
-     _deriveRewardStatus uses Math.floor(stamps/5) > claimed to detect
-     unlocked cycles. Resetting stamps here would corrupt that logic. */
+  c.stamps = (c.stamps || 0) % 5;
   c.rewardsClaimed = (c.rewardsClaimed || 0) + 1;
   c.rewardState = REWARD_STATE.CLAIMED; c.rewardStatus = 'claimed';
   c.rewardReady = false; c.rewardClaimedAt = new Date().toISOString();
@@ -1263,60 +1315,30 @@ async function runScenario(type) {
 /* ═══════════════════════════════════════════════════════════════
    ACTIVITY LOG
 ════════════════════════════════════════════════════════════════ */
-async function refreshActivityLog() {
+function refreshActivityLog() {
   populateSelects();
   const filterId = document.getElementById('activityTarget').value;
+  let log = loadActivity();
+  if (filterId !== 'all') log = log.filter(e => e.customerId === filterId);
+  log = log.slice().reverse().slice(0, 100);
+
   const wrap = document.getElementById('activityList');
-  wrap.innerHTML = '<p style="color:var(--soft);font-size:12px;">⏳ Loading from Firebase…</p>';
+  if (!log.length) { wrap.innerHTML = '<p style="color:var(--soft);font-size:12px;">No activity.</p>'; return; }
 
-  try {
-    let entries = [];
-
-    if (filterId !== 'all') {
-      /* Single customer — read activity:{customerId} directly */
-      const data = await fbGet('activity:' + filterId);
-      if (Array.isArray(data)) entries = data;
-    } else {
-      /* All customers — read the whole activity/ node */
-      const snap = await db.ref('activity').once('value');
-      if (snap.exists()) {
-        snap.forEach(child => {
-          const arr = child.val();
-          if (Array.isArray(arr)) entries.push(...arr);
-        });
-      }
-    }
-
-    /* Sort newest-first, cap at 100 */
-    entries.sort((a, b) => {
-      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-      return tb - ta;
-    });
-    entries = entries.slice(0, 100);
-
-    if (!entries.length) {
-      wrap.innerHTML = '<p style="color:var(--soft);font-size:12px;">No activity found in Firebase.</p>';
-      return;
-    }
-
-    const iconMap = { stamp:'🥟', rewardUnlocked:'🎁', rewardClaimed:'✅', registration:'🆕', default:'📋' };
-    wrap.innerHTML = entries.map(e => {
-      const icon = iconMap[e.eventType] || iconMap.default;
-      const ts = e.timestamp ? new Date(e.timestamp).toLocaleString() : '—';
-      return `
-        <div class="activity-item">
-          <div class="activity-icon">${icon}</div>
-          <div class="activity-text">
-            <div class="title">${e.title || e.eventType || '—'}</div>
-            <div class="desc">${e.description || ''}</div>
-            <div class="ts">${e.customerId || '—'} · ${ts}</div>
-          </div>
-        </div>`;
-    }).join('');
-  } catch(e) {
-    wrap.innerHTML = `<p style="color:var(--red);font-size:12px;">❌ Firebase read failed: ${e.message}</p>`;
-  }
+  const iconMap = { stamp:'🥟', rewardUnlocked:'🎁', rewardClaimed:'✅', registration:'🆕', default:'📋' };
+  wrap.innerHTML = log.map(e => {
+    const icon = iconMap[e.eventType] || iconMap.default;
+    const ts = e.timestamp ? new Date(e.timestamp).toLocaleString() : '—';
+    return `
+      <div class="activity-item">
+        <div class="activity-icon">${icon}</div>
+        <div class="activity-text">
+          <div class="title">${e.title || e.eventType}</div>
+          <div class="desc">${e.description || ''}</div>
+          <div class="ts">${e.customerId} · ${ts}</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1474,98 +1496,6 @@ async function devWipeFirebaseCustomers() {
   toast('🔥 Firebase customers/ wiped', 'err');
 }
 
-async function devWipeAuditLogs() {
-  if (!confirm('Delete ALL entries under auditLogs/ in Firebase?\n\nThis cannot be undone.')) return;
-  await db.ref('auditLogs').remove();
-  log('warn', 'Firebase auditLogs/ wiped');
-  toast('🗑 auditLogs/ wiped', 'err');
-}
-
-async function devWipeStampsLog() {
-  if (!confirm('Delete ALL entries under stamps_log/ in Firebase?\n\nThis cannot be undone.')) return;
-  await db.ref('stamps_log').remove();
-  log('warn', 'Firebase stamps_log/ wiped');
-  toast('🗑 stamps_log/ wiped', 'err');
-}
-
-async function devWipeRewardClaims() {
-  if (!confirm('Delete ALL entries under rewardClaims/ in Firebase?\n\nThis cannot be undone.')) return;
-  await db.ref('rewardClaims').remove();
-  log('warn', 'Firebase rewardClaims/ wiped');
-  toast('🗑 rewardClaims/ wiped', 'err');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   LOCATION PING HISTORY
-   Reads locationPings/{staffId}/ — last 50 entries per staff member.
-════════════════════════════════════════════════════════════════ */
-async function loadPingHistory() {
-  const targetId = (document.getElementById('pingHistoryTarget').value || '').trim();
-  const wrap  = document.getElementById('pingHistoryWrap');
-  const label = document.getElementById('pingHistoryLabel');
-  const list  = document.getElementById('pingHistoryList');
-
-  wrap.style.display = 'block';
-  list.innerHTML = '<p style="color:var(--soft);font-size:12px;">⏳ Loading…</p>';
-  label.textContent = targetId || 'All Staff';
-
-  try {
-    let entries = [];
-
-    if (targetId) {
-      /* Single staff member */
-      const snap = await db.ref('locationPings/' + targetId).orderByChild('at').limitToLast(50).once('value');
-      if (snap.exists()) {
-        snap.forEach(child => entries.push(child.val()));
-      }
-    } else {
-      /* All staff — collect last 20 per member */
-      const snap = await db.ref('locationPings').once('value');
-      if (snap.exists()) {
-        snap.forEach(staffNode => {
-          const staffEntries = [];
-          staffNode.forEach(ping => staffEntries.push(ping.val()));
-          /* Take last 20 per staff to avoid flooding */
-          entries.push(...staffEntries.slice(-20));
-        });
-      }
-    }
-
-    /* Sort newest-first */
-    entries.sort((a, b) => {
-      const ta = a.timestamp || (a.at ? new Date(a.at).getTime() : 0);
-      const tb = b.timestamp || (b.at ? new Date(b.at).getTime() : 0);
-      return tb - ta;
-    });
-    entries = entries.slice(0, 100);
-
-    if (!entries.length) {
-      list.innerHTML = '<p style="color:var(--soft);font-size:12px;">No ping history found.</p>';
-      return;
-    }
-
-    list.innerHTML = entries.map(p => {
-      const ts = p.at ? new Date(p.at).toLocaleString() : '—';
-      const statusColor = p.ok ? 'var(--green)' : 'var(--red)';
-      const statusIcon  = p.ok ? '✅' : '❌';
-      const coordStr = (p.lat && p.lng)
-        ? `<span style="color:var(--soft);">LAT</span> ${p.lat.toFixed(5)} &nbsp;<span style="color:var(--soft);">LNG</span> ${p.lng.toFixed(5)}`
-        : (p.errorCode ? `Error code: ${p.errorCode} — ${p.reason || 'unknown'}` : '—');
-      return `
-        <div class="activity-item">
-          <div class="activity-icon" style="background:rgba(255,255,255,0.04);font-size:14px;">${statusIcon}</div>
-          <div class="activity-text">
-            <div class="title" style="color:${statusColor};">${p.staffId || '—'} <span style="font-size:10px;color:var(--soft);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">${p.role || ''}</span></div>
-            <div class="desc" style="font-family:monospace;font-size:11px;">${coordStr}</div>
-            <div class="ts">${ts}</div>
-          </div>
-        </div>`;
-    }).join('');
-  } catch(e) {
-    list.innerHTML = `<p style="color:var(--red);font-size:12px;">❌ Failed: ${e.message}</p>`;
-  }
-}
-
 /* ═══════════════════════════════════════════════════════════════
    STAFF LOCATION VIEWER  (V-L1)
    Reads staff_location/ from Firebase and renders live cards.
@@ -1652,6 +1582,177 @@ function loadStaffLocations() {
         Failed to read staff_location/: ${err.message}
       </div>`;
   });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SALES ANALYTICS  — groups sales/ by location, ranks spots,
+   surfaces best-time-to-visit, and builds a suggested route.
+════════════════════════════════════════════════════════════════ */
+let _saSpots = [];      // last computed array of location-spot summaries
+let _saRawSales = [];   // raw sales rows for current date range
+var _saListener = null; // Firebase onValue handle — var avoids TDZ, same pattern as staff location
+
+/** Buckets a lat/lng pair into a grid cell so nearby sales (e.g. the
+ *  same street corner, even with GPS jitter) count as one "spot".
+ *  Precision: 3 decimals ≈ 100m, 2 decimals ≈ 1km, 1 decimal ≈ 10km. */
+function _saGridKey(lat, lng, precision) {
+  return lat.toFixed(precision) + ',' + lng.toFixed(precision);
+}
+
+function _saPeso(n) { return '₱' + Math.round(n).toLocaleString('en-PH'); }
+
+/** Attaches a live listener on sales/ so the panel updates automatically
+ *  whenever a new sale is logged on the staff POS — no manual refresh
+ *  needed, same behaviour as the Staff Location panel. */
+function loadSalesAnalytics() {
+  const wrap = document.getElementById('saTableWrap');
+  wrap.innerHTML = '<div class="sa-empty"><span style="font-size:30px;display:block;margin-bottom:8px;">📡</span>Loading sales…</div>';
+  document.getElementById('saRouteCard').style.display = 'none';
+
+  if (_saListener) db.ref('sales').off('value', _saListener);
+
+  _saListener = db.ref('sales').on('value', snap => {
+    const val = snap.val() || {};
+    let rows = Object.values(val);
+
+    const days = Number(document.getElementById('saRange').value);
+    if (days > 0) {
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+      rows = rows.filter(r => (r.timestamp || 0) >= cutoff);
+    }
+
+    _saRawSales = rows;
+    document.getElementById('saLastRefresh').textContent = 'Live · last update: ' + new Date().toLocaleTimeString();
+    renderSalesAnalytics();
+  }, err => {
+    wrap.innerHTML = `<div class="sa-empty"><span style="font-size:30px;display:block;margin-bottom:8px;">❌</span>Failed to read sales/: ${err.message}</div>`;
+    log('err', 'Sales analytics live load failed: ' + err.message);
+  });
+}
+
+/** Detaches the live sales/ listener — call when leaving the panel so it
+ *  doesn't keep re-rendering (and re-clustering) in the background. */
+function stopSalesAnalytics() {
+  if (_saListener) { db.ref('sales').off('value', _saListener); _saListener = null; }
+}
+
+function renderSalesAnalytics() {
+  const wrap = document.getElementById('saTableWrap');
+  const rows = _saRawSales;
+  const precision = Number(document.getElementById('saGridSize').value);
+
+  const tagged = rows.filter(r => typeof r.lat === 'number' && typeof r.lng === 'number');
+  const untagged = rows.length - tagged.length;
+
+  const totalRevenue = rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
+  document.getElementById('saTotalSales').textContent    = rows.length.toLocaleString();
+  document.getElementById('saTotalRevenue').textContent  = _saPeso(totalRevenue);
+  document.getElementById('saUntagged').textContent      = untagged.toLocaleString();
+
+  if (tagged.length === 0) {
+    document.getElementById('saTotalSpots').textContent = '0';
+    wrap.innerHTML = `<div class="sa-empty"><span style="font-size:30px;display:block;margin-bottom:8px;">🛰</span>No GPS-tagged sales in this range yet.<br>Sales get tagged automatically once your vendor logs a sale on the staff POS with location enabled.</div>`;
+    _saSpots = [];
+    return;
+  }
+
+  /* ── Group into spots ── */
+  const spots = {};
+  tagged.forEach(r => {
+    const key = _saGridKey(r.lat, r.lng, precision);
+    if (!spots[key]) {
+      spots[key] = { key, lat: r.lat, lng: r.lng, sales: [], revenue: 0, hourCounts: new Array(24).fill(0), staffIds: new Set() };
+    }
+    const s = spots[key];
+    s.sales.push(r);
+    s.revenue += Number(r.total) || 0;
+    const ts = r.timestamp || (r.createdAt ? new Date(r.createdAt).getTime() : 0);
+    if (ts) s.hourCounts[new Date(ts).getHours()]++;
+    if (r.staffId) s.staffIds.add(r.staffId);
+    /* running centroid so the map link points at the middle of the cluster */
+    s.lat = (s.lat * (s.sales.length - 1) + r.lat) / s.sales.length;
+    s.lng = (s.lng * (s.sales.length - 1) + r.lng) / s.sales.length;
+  });
+
+  const spotList = Object.values(spots).map(s => {
+    const peakHour = s.hourCounts.indexOf(Math.max(...s.hourCounts));
+    const lastSale = Math.max(...s.sales.map(r => r.timestamp || 0));
+    return {
+      ...s,
+      customers: s.sales.length,   // each cash sale ≈ one customer served
+      avg: s.revenue / s.sales.length,
+      peakHour,
+      lastSale
+    };
+  });
+
+  document.getElementById('saTotalSpots').textContent = spotList.length.toLocaleString();
+
+  const rankBy = document.getElementById('saRankBy').value;
+  const sortKey = rankBy === 'revenue' ? 'revenue' : rankBy === 'avg' ? 'avg' : 'customers';
+  spotList.sort((a, b) => b[sortKey] - a[sortKey]);
+  _saSpots = spotList;
+
+  wrap.innerHTML = `
+    <table class="sa-table">
+      <thead><tr>
+        <th>Rank</th><th>Location</th><th>Customers Served</th><th>Revenue</th>
+        <th>Avg Sale</th><th>Best Hour</th><th>Activity (by hour)</th><th>Last Sale</th>
+      </tr></thead>
+      <tbody>
+        ${spotList.map((s, i) => {
+          const mapsUrl = `https://www.google.com/maps?q=${s.lat},${s.lng}`;
+          const maxH = Math.max(...s.hourCounts) || 1;
+          const bars = s.hourCounts.map(c => `<div class="sa-hour-bar" style="height:${Math.max(2, Math.round(c / maxH * 24))}px" title="${c} sale(s)"></div>`).join('');
+          const rankClass = i === 0 ? ' sa-rank-1' : i === 1 ? ' sa-rank-2' : i === 2 ? ' sa-rank-3' : '';
+          return `
+          <tr>
+            <td><span class="sa-rank${rankClass}">${i + 1}</span></td>
+            <td><a class="sa-loc-link" href="${mapsUrl}" target="_blank" rel="noopener">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</a></td>
+            <td>${s.customers}</td>
+            <td>${_saPeso(s.revenue)}</td>
+            <td>${_saPeso(s.avg)}</td>
+            <td>${s.peakHour}:00–${s.peakHour + 1}:00</td>
+            <td><div class="sa-hours">${bars}</div></td>
+            <td>${s.lastSale ? new Date(s.lastSale).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+/** Builds the suggested visiting order: best spots first, each annotated
+ *  with its best hour to be there, so the vendor knows where AND when. */
+function generateSalesRoute() {
+  if (!_saSpots.length) { toast('No location data to build a route from', 'warn'); return; }
+  const list = document.getElementById('saRouteList');
+  const top = _saSpots.slice(0, 10);
+
+  list.innerHTML = top.map((s, i) => {
+    const pct = _saSpots[0].customers ? Math.round((s.customers / _saSpots[0].customers) * 100) : 0;
+    return `
+    <div class="sa-route-item">
+      <div class="sa-route-num">${i + 1}</div>
+      <div class="sa-route-body">
+        <div class="sa-route-title">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)} — ${s.customers} customer${s.customers === 1 ? '' : 's'}, ${_saPeso(s.revenue)}</div>
+        <div class="sa-route-sub">Best time to be here: ${s.peakHour}:00–${s.peakHour + 1}:00 · ${pct}% of top spot's traffic</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('saRouteCard').style.display = 'block';
+  document.getElementById('saRouteCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/** Opens the top suggested spots as a multi-stop Google Maps route. */
+function openSalesRouteInMaps() {
+  if (!_saSpots.length) return;
+  const top = _saSpots.slice(0, 10);
+  const dest = top[top.length - 1];
+  const waypoints = top.slice(0, -1).map(s => `${s.lat},${s.lng}`).join('|');
+  let url = `https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}`;
+  if (waypoints) url += `&waypoints=${encodeURIComponent(waypoints)}`;
+  window.open(url, '_blank', 'noopener');
 }
 
 /* ═══════════════════════════════════════════════════════════════
